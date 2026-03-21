@@ -99,7 +99,7 @@ const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     interestPaid: 'Interest paid',
     capitalPlusInterest: 'Capital + interest',
     chartTitle: 'Capital vs interest paid over time',
-    chartSubtitle: 'Click the chart to inspect values over time',
+    chartSubtitle: 'Use the slider to inspect values over time',
     yearLabel: 'Year',
     chartReimbursedCapitalLegend: 'Reimbursed capital',
     chartRemainingCapitalLegend: 'Remaining capital',
@@ -158,7 +158,7 @@ const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     interestPaid: 'Interessi pagati',
     capitalPlusInterest: 'Capitale + interessi',
     chartTitle: 'Capitale vs interessi pagati nel tempo',
-    chartSubtitle: 'Fai clic sul grafico per vedere i valori nel tempo',
+    chartSubtitle: 'Usa il cursore per vedere i valori nel tempo',
     yearLabel: 'Anno',
     chartReimbursedCapitalLegend: 'Capitale rimborsato',
     chartRemainingCapitalLegend: 'Capitale residuo',
@@ -218,7 +218,7 @@ const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     interestPaid: 'Intérêts payés',
     capitalPlusInterest: 'Capital + intérêts',
     chartTitle: 'Capital vs intérêts payés au fil du temps',
-    chartSubtitle: 'Cliquez sur le graphique pour inspecter les valeurs dans le temps',
+    chartSubtitle: 'Utilisez le curseur pour inspecter les valeurs dans le temps',
     yearLabel: 'Année',
     chartReimbursedCapitalLegend: 'Capital remboursé',
     chartRemainingCapitalLegend: 'Capital restant',
@@ -278,7 +278,7 @@ const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     interestPaid: 'Gezahlte Zinsen',
     capitalPlusInterest: 'Kapital + Zinsen',
     chartTitle: 'Gezahltes Kapital vs. Zinsen im Zeitverlauf',
-    chartSubtitle: 'Klicken Sie auf das Diagramm, um Werte über die Zeit zu sehen',
+    chartSubtitle: 'Verwenden Sie den Schieberegler, um Werte im Zeitverlauf zu sehen',
     yearLabel: 'Jahr',
     chartReimbursedCapitalLegend: 'Getilgtes Kapital',
     chartRemainingCapitalLegend: 'Restkapital',
@@ -816,27 +816,13 @@ function InteractiveChart({ data, maxAmount, selectedYear, onYearChange }: Inter
       .map((point, index) => `${index === 0 ? 'M' : 'L'} ${xForIndex(index)} ${yForValue(extractor(point))}`)
       .join(' ')
 
-  const updateYearFromClientX = (clientX: number, element: SVGSVGElement) => {
-    const bounds = element.getBoundingClientRect()
-    const relativeX = Math.min(Math.max(clientX - bounds.left - padding.left, 0), innerWidth)
-    const year = data.length === 0 ? 1 : Math.round((relativeX / innerWidth) * data.length)
-    onYearChange(Math.min(Math.max(year, 1), data.length))
-  }
-
   return (
     <div className="mt-4 rounded-md border border-slate-800 bg-slate-900/80 p-2 sm:p-3">
       <svg
         viewBox={`0 0 ${width} ${height}`}
-        className="h-[260px] w-full cursor-crosshair touch-pan-y"
+        className="h-[260px] w-full"
         role="img"
         aria-label="Mortgage capital and interest chart"
-        onClick={(event) => updateYearFromClientX(event.clientX, event.currentTarget)}
-        onPointerDown={(event) => updateYearFromClientX(event.clientX, event.currentTarget)}
-        onPointerMove={(event) => {
-          if (event.buttons === 1 || event.pointerType === 'touch') {
-            updateYearFromClientX(event.clientX, event.currentTarget)
-          }
-        }}
       >
         <line
           x1={padding.left}
@@ -893,6 +879,18 @@ function InteractiveChart({ data, maxAmount, selectedYear, onYearChange }: Inter
           </>
         ) : null}
       </svg>
+      <div className="mt-3 px-1">
+        <input
+          type="range"
+          min={1}
+          max={data.length}
+          step={1}
+          value={Math.min(Math.max(selectedYear, 1), data.length)}
+          onChange={(event) => onYearChange(Number(event.target.value))}
+          aria-label="Select chart year"
+          className="h-2 w-full cursor-pointer accent-emerald-400"
+        />
+      </div>
     </div>
   )
 }
