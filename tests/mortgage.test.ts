@@ -24,6 +24,7 @@ function testFrenchMortgageWithInterestAndBankCost() {
   assertEqual(result.principal, 180000, 'principal')
   assertEqual(result.monthlyRateWithoutBankCost, 758.89, 'monthlyRateWithoutBankCost')
   assertEqual(result.monthlyPayment, 760.89, 'monthlyPayment')
+  assertEqual(result.totalCapitalPaid, 180000, 'totalCapitalPaid')
   assertEqual(result.installments.length, 360, 'installments length')
 
   const first = result.installments[0]
@@ -35,6 +36,8 @@ function testFrenchMortgageWithInterestAndBankCost() {
   const lastInstallment = result.installments[result.installments.length - 1]
   assertEqual(lastInstallment.remainingPrincipal, 0, 'last remaining principal')
   assertEqual(lastInstallment.bankCost, 2, 'last bank cost')
+  assertEqual(result.totalCapitalAndInterest, 273199.3, 'totalCapitalAndInterest')
+  assertEqual(result.totalPaid, 273919.3, 'totalPaid')
 }
 
 function testZeroInterest() {
@@ -47,7 +50,9 @@ function testZeroInterest() {
   })
 
   assertEqual(result.monthlyRateWithoutBankCost, 833.33, 'zero-interest monthly rate')
+  assertEqual(result.totalCapitalPaid, 100000, 'zero-interest totalCapitalPaid')
   assertEqual(result.totalInterest, 0, 'zero-interest totalInterest')
+  assertEqual(result.totalCapitalAndInterest, 100000, 'zero-interest totalCapitalAndInterest')
   assertEqual(result.installments.length, 120, 'zero-interest installments length')
   assertEqual(result.installments[0].interest, 0, 'zero-interest first installment interest')
   assertEqual(result.installments[result.installments.length - 1].remainingPrincipal, 0, 'zero-interest last remaining principal')

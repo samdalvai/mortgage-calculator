@@ -19,7 +19,9 @@ export type MortgagePlan = {
   principal: number
   monthlyRateWithoutBankCost: number
   monthlyPayment: number
+  totalCapitalPaid: number
   totalInterest: number
+  totalCapitalAndInterest: number
   totalBankCosts: number
   totalPaid: number
   installments: MortgageInstallment[]
@@ -36,7 +38,9 @@ export function calculateMortgagePlan(input: MortgageInput): MortgagePlan {
       principal,
       monthlyRateWithoutBankCost: 0,
       monthlyPayment: roundToCents(input.monthlyBankCost),
+      totalCapitalPaid: 0,
       totalInterest: 0,
+      totalCapitalAndInterest: 0,
       totalBankCosts: roundToCents(input.monthlyBankCost * totalMonths),
       totalPaid: roundToCents(input.monthlyBankCost * totalMonths),
       installments: Array.from({ length: totalMonths }, (_, index) => ({
@@ -84,7 +88,9 @@ export function calculateMortgagePlan(input: MortgageInput): MortgagePlan {
     })
   }
 
+  const totalCapitalPaid = roundToCents(installments.reduce((acc, curr) => acc + curr.principal, 0))
   const totalInterest = roundToCents(installments.reduce((acc, curr) => acc + curr.interest, 0))
+  const totalCapitalAndInterest = roundToCents(totalCapitalPaid + totalInterest)
   const totalBankCosts = roundToCents(totalMonths * input.monthlyBankCost)
   const totalPaid = roundToCents(installments.reduce((acc, curr) => acc + curr.payment, 0))
 
@@ -92,7 +98,9 @@ export function calculateMortgagePlan(input: MortgageInput): MortgagePlan {
     principal: roundToCents(principal),
     monthlyRateWithoutBankCost: roundToCents(monthlyRateWithoutBankCost),
     monthlyPayment: roundToCents(monthlyRateWithoutBankCost + input.monthlyBankCost),
+    totalCapitalPaid,
     totalInterest,
+    totalCapitalAndInterest,
     totalBankCosts,
     totalPaid,
     installments,
