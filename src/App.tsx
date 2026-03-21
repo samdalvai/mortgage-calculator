@@ -26,6 +26,40 @@ const toPdfSafeText = (value: string) =>
 const formatCurrencyForPdf = (amount: number) =>
   pdfCurrencyFormatter.format(amount).replace('€', 'EUR').replace(/\u00a0/g, ' ')
 
+const PDF_COLUMN_WIDTHS = {
+  month: 6,
+  payment: 14,
+  principal: 14,
+  interest: 14,
+  bankCost: 14,
+  remaining: 18,
+} as const
+
+const padPdfCell = (value: string, width: number, align: 'left' | 'right' = 'right') => {
+  if (value.length >= width) {
+    return value.slice(0, width)
+  }
+
+  return align === 'left' ? value.padEnd(width, ' ') : value.padStart(width, ' ')
+}
+
+const createPdfTableLine = (
+  month: string,
+  payment: string,
+  principal: string,
+  interest: string,
+  bankCost: string,
+  remainingCapital: string,
+) =>
+  [
+    padPdfCell(month, PDF_COLUMN_WIDTHS.month, 'left'),
+    padPdfCell(payment, PDF_COLUMN_WIDTHS.payment),
+    padPdfCell(principal, PDF_COLUMN_WIDTHS.principal),
+    padPdfCell(interest, PDF_COLUMN_WIDTHS.interest),
+    padPdfCell(bankCost, PDF_COLUMN_WIDTHS.bankCost),
+    padPdfCell(remainingCapital, PDF_COLUMN_WIDTHS.remaining),
+  ].join(' | ')
+
 function createPdfDocumentFromLines(lines: string[]) {
   const pages: string[][] = []
   for (let index = 0; index < lines.length; index += PAGE_LINE_LIMIT) {
@@ -38,7 +72,7 @@ function createPdfDocumentFromLines(lines: string[]) {
 
   objects[1] = '<< /Type /Catalog /Pages 2 0 R >>'
   objects[2] = `<< /Type /Pages /Kids [${pages.map((_, pageIndex) => `${firstPageObjectId + pageIndex * 2} 0 R`).join(' ')}] /Count ${pages.length} >>`
-  objects[fontObjectId] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>'
+  objects[fontObjectId] = '<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>'
 
   pages.forEach((pageLines, pageIndex) => {
     const pageObjectId = firstPageObjectId + pageIndex * 2
@@ -111,13 +145,32 @@ function App() {
       `Annual interest rate: ${(annualInterestRate * 100).toFixed(2)}%`,
       `Monthly bank cost: ${formatCurrencyForPdf(monthlyBankCost)}`,
       `Monthly payment: ${formatCurrencyForPdf(plan.monthlyPayment)}`,
+      `Total capital paid: ${formatCurrencyForPdf(plan.totalCapitalPaid)}`,
+      `Total interest paid: ${formatCurrencyForPdf(plan.totalInterest)}`,
+      `Total capital + interest: ${formatCurrencyForPdf(plan.totalCapitalAndInterest)}`,
       `Total paid: ${formatCurrencyForPdf(plan.totalPaid)}`,
       '',
-      'Month | Payment | Principal | Interest | Bank cost | Remaining capital',
-      '---------------------------------------------------------------------',
+      createPdfTableLine('Month', 'Payment', 'Principal', 'Interest', 'Bank cost', 'Remaining capital'),
+      '-'.repeat(91),
       ...plan.installments.map(
         (installment) =>
-          `${installment.month.toString().padStart(4, ' ')} | ${formatCurrencyForPdf(installment.payment).padStart(12, ' ')} | ${formatCurrencyForPdf(installment.principal).padStart(12, ' ')} | ${formatCurrencyForPdf(installment.interest).padStart(12, ' ')} | ${formatCurrencyForPdf(installment.bankCost).padStart(12, ' ')} | ${formatCurrencyForPdf(installment.remainingPrincipal).padStart(14, ' ')}`,
+          createPdfTableLine(
+            installment.month.toString(),
+            formatCurrencyForPdf(installment.payment),
+            formatCurrencyForPdf(installment.principal),
+            formatCurrencyForPdf(installment.interest),
+            formatCurrencyForPdf(installment.bankCost),
+            formatCurrencyForPdf(installment.remainingPrincipal),
+          ),
+      ),
+      '-'.repeat(91),
+      createPdfTableLine(
+        'TOTAL',
+        formatCurrencyForPdf(plan.totalPaid),
+        formatCurrencyForPdf(plan.totalCapitalPaid),
+        formatCurrencyForPdf(plan.totalInterest),
+        formatCurrencyForPdf(plan.totalBankCosts),
+        formatCurrencyForPdf(0),
       ),
     ]
 
@@ -193,7 +246,12 @@ function App() {
                 label="Monthly rate (without bank cost)"
                 value={euroFormatter.format(plan.monthlyRateWithoutBankCost)}
               />
+              <SummaryItem label="Total capital paid" value={euroFormatter.format(plan.totalCapitalPaid)} />
               <SummaryItem label="Total interest" value={euroFormatter.format(plan.totalInterest)} />
+              <SummaryItem
+                label="Total capital + interest"
+                value={euroFormatter.format(plan.totalCapitalAndInterest)}
+              />
               <SummaryItem label="Total bank costs" value={euroFormatter.format(plan.totalBankCosts)} />
               <SummaryItem label="Total paid" value={euroFormatter.format(plan.totalPaid)} />
             </dl>
@@ -236,6 +294,20 @@ function App() {
                   </li>
                 ))}
               </ul>
+            ) : null}
+
+            {showPlan ? (
+              <div className="mt-5 rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-4 text-sm">
+                <h3 className="text-base font-semibold text-emerald-200">Plan totals</h3>
+                <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                  <PlanValue label="Capital paid" value={euroFormatter.format(plan.totalCapitalPaid)} />
+                  <PlanValue label="Interest paid" value={euroFormatter.format(plan.totalInterest)} />
+                  <PlanValue
+                    label="Capital + interest"
+                    value={euroFormatter.format(plan.totalCapitalAndInterest)}
+                  />
+                </div>
+              </div>
             ) : null}
           </div>
         </div>
