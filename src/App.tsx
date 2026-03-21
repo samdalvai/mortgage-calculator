@@ -44,6 +44,8 @@ type Translation = {
   annualInterestRateHint: string
   monthlyBankCost: string
   additionalAnnualPayment: string
+  downPaymentExceedsHouseCostError: string
+  additionalPaymentExceedsLoanError: string
   additionalPaymentStrategy: string
   shortenDurationStrategy: string
   reduceMonthlyPaymentStrategy: string
@@ -121,6 +123,8 @@ const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     annualInterestRateHint: 'Default is 3,00%',
     monthlyBankCost: 'Monthly bank cost (€)',
     additionalAnnualPayment: 'Additional annual payment (€)',
+    downPaymentExceedsHouseCostError: 'Down payment cannot be higher than house cost.',
+    additionalPaymentExceedsLoanError: 'Additional annual payment cannot exceed the loan principal (house cost - down payment).',
     additionalPaymentStrategy: 'Additional payment strategy',
     shortenDurationStrategy: 'Shorten mortgage duration',
     reduceMonthlyPaymentStrategy: 'Reduce monthly payment',
@@ -194,6 +198,9 @@ const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     annualInterestRateHint: 'Valore predefinito 3,00%',
     monthlyBankCost: 'Costo banca mensile (€)',
     additionalAnnualPayment: 'Pagamento annuale extra (€)',
+    downPaymentExceedsHouseCostError: "L'anticipo non può essere maggiore del costo casa.",
+    additionalPaymentExceedsLoanError:
+      'Il pagamento annuale extra non può superare il capitale finanziato (costo casa - anticipo).',
     additionalPaymentStrategy: 'Strategia pagamento extra',
     shortenDurationStrategy: 'Riduci durata mutuo',
     reduceMonthlyPaymentStrategy: 'Riduci rata mensile',
@@ -268,6 +275,9 @@ const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     annualInterestRateHint: 'Valeur par défaut : 3,00%',
     monthlyBankCost: 'Frais bancaires mensuels (€)',
     additionalAnnualPayment: 'Paiement annuel supplémentaire (€)',
+    downPaymentExceedsHouseCostError: "L'apport ne peut pas être supérieur au coût du logement.",
+    additionalPaymentExceedsLoanError:
+      "Le paiement annuel supplémentaire ne peut pas dépasser le capital emprunté (coût du logement - apport).",
     additionalPaymentStrategy: 'Stratégie paiement supplémentaire',
     shortenDurationStrategy: 'Réduire la durée du prêt',
     reduceMonthlyPaymentStrategy: 'Réduire la mensualité',
@@ -342,6 +352,9 @@ const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     annualInterestRateHint: 'Standardwert ist 3,00%',
     monthlyBankCost: 'Monatliche Bankkosten (€)',
     additionalAnnualPayment: 'Zusätzliche jährliche Zahlung (€)',
+    downPaymentExceedsHouseCostError: 'Die Anzahlung darf nicht höher als der Immobilienpreis sein.',
+    additionalPaymentExceedsLoanError:
+      'Die zusätzliche jährliche Zahlung darf den Darlehensbetrag (Immobilienpreis - Anzahlung) nicht übersteigen.',
     additionalPaymentStrategy: 'Strategie für Zusatzzahlung',
     shortenDurationStrategy: 'Laufzeit verkürzen',
     reduceMonthlyPaymentStrategy: 'Monatsrate senken',
@@ -615,8 +628,19 @@ function App() {
   const selectedChartPoint = chartData[Math.max(selectedChartYear, 0)] ?? null
   const interestSaved = Math.max(baselinePlan.totalInterest - plan.totalInterest, 0)
   const monthsSaved = Math.max(baselinePlan.durationMonths - plan.durationMonths, 0)
+  const loanPrincipal = Math.max(houseCost - downPayment, 0)
+  const validationError =
+    downPayment > houseCost
+      ? copy.downPaymentExceedsHouseCostError
+      : additionalAnnualPayment > loanPrincipal
+        ? copy.additionalPaymentExceedsLoanError
+        : null
 
   const handleExportPlanAsPdf = () => {
+    if (validationError) {
+      return
+    }
+
     const lines = [
       copy.pdfTitle,
       copy.pdfGeneratedBy,
@@ -727,6 +751,9 @@ function App() {
               onValueChange={setDownPayment}
               useGrouping
             />
+            {downPayment > houseCost ? (
+              <p className="text-sm font-medium text-rose-400">{copy.downPaymentExceedsHouseCostError}</p>
+            ) : null}
             <InputField
               id="years"
               label={copy.mortgageDurationYears}
@@ -765,6 +792,9 @@ function App() {
               onValueChange={setAdditionalAnnualPayment}
               useGrouping
             />
+            {additionalAnnualPayment > loanPrincipal ? (
+              <p className="text-sm font-medium text-rose-400">{copy.additionalPaymentExceedsLoanError}</p>
+            ) : null}
             <label className="block" htmlFor="additionalPaymentStrategy">
               <span className="text-sm font-medium text-slate-200">{copy.additionalPaymentStrategy}</span>
               <select
@@ -781,6 +811,11 @@ function App() {
 
           <div className="rounded-xl border border-slate-800 bg-slate-900 p-4 sm:p-5">
             <h2 className="text-lg font-semibold">{copy.summaryTitle}</h2>
+            {validationError ? (
+              <p className="mt-4 rounded-md border border-rose-500/60 bg-rose-500/10 px-3 py-2 text-sm text-rose-300">
+                {validationError}
+              </p>
+            ) : null}
             <dl className="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
               <SummaryItem label={copy.loanPrincipal} value={euroFormatter.format(plan.principal)} />
               <SummaryItem label={copy.monthlyPayment} value={euroFormatter.format(plan.monthlyPayment)} />
@@ -794,7 +829,7 @@ function App() {
               <SummaryItem label={copy.totalCapitalAndInterest} value={euroFormatter.format(plan.totalCapitalAndInterest)} />
               <SummaryItem label={copy.totalBankCosts} value={euroFormatter.format(plan.totalBankCosts)} />
               <SummaryItem label={copy.totalPaid} value={euroFormatter.format(plan.totalPaid)} />
-              {additionalAnnualPayment > 0 ? (
+              {additionalAnnualPayment > 0 && !validationError ? (
                 <>
                   <SummaryItem label={copy.interestSaved} value={euroFormatter.format(interestSaved)} />
                   <SummaryItem
@@ -809,7 +844,7 @@ function App() {
               <h3 className="text-base font-semibold text-slate-100">{copy.chartTitle}</h3>
               <p className="mt-1 text-xs text-slate-400">{copy.chartSubtitle}</p>
 
-              {chartData.length > 0 ? (
+              {chartData.length > 0 && !validationError ? (
                 <>
                   <InteractiveChart
                     data={chartData}
@@ -845,6 +880,7 @@ function App() {
               <button
                 type="button"
                 onClick={() => setShowPlan((current) => !current)}
+                disabled={Boolean(validationError)}
                 className="rounded-md bg-emerald-500 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-emerald-400"
               >
                 {showPlan ? copy.hidePlan : copy.showPlan}
@@ -852,13 +888,14 @@ function App() {
               <button
                 type="button"
                 onClick={handleExportPlanAsPdf}
+                disabled={Boolean(validationError)}
                 className="rounded-md border border-emerald-400 px-4 py-2 text-sm font-semibold text-emerald-300 transition hover:bg-emerald-500/10"
               >
                 {copy.exportPlanAsPdf}
               </button>
             </div>
 
-            {showPlan ? (
+            {showPlan && !validationError ? (
               <ul className="mt-5 space-y-3">
                 {plan.installments.map((installment) => (
                   <li
@@ -882,7 +919,7 @@ function App() {
               </ul>
             ) : null}
 
-            {showPlan ? (
+            {showPlan && !validationError ? (
               <div className="mt-5 rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-4 text-sm">
                 <h3 className="text-base font-semibold text-emerald-200">{copy.planTotals}</h3>
                 <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
