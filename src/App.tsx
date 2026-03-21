@@ -78,12 +78,7 @@ type Translation = {
   pdfTotalRow: string
 }
 
-const LOCALE_BY_LANGUAGE: Record<SupportedLanguage, string> = {
-  en: 'en-US',
-  it: 'it-IT',
-  fr: 'fr-FR',
-  de: 'de-DE',
-}
+const EURO_NUMBER_LOCALE = 'de-DE'
 
 const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
   en: {
@@ -123,7 +118,7 @@ const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     downPayment: 'Down payment (€)',
     mortgageDurationYears: 'Mortgage duration (years)',
     annualInterestRate: 'Annual interest rate',
-    annualInterestRateHint: 'Default is 0.03 (3%)',
+    annualInterestRateHint: 'Default is 3,00%',
     monthlyBankCost: 'Monthly bank cost (€)',
     additionalAnnualPayment: 'Additional annual payment (€)',
     additionalPaymentStrategy: 'Additional payment strategy',
@@ -196,7 +191,7 @@ const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     downPayment: 'Anticipo (€)',
     mortgageDurationYears: 'Durata mutuo (anni)',
     annualInterestRate: 'Tasso di interesse annuo',
-    annualInterestRateHint: 'Valore predefinito 0.03 (3%)',
+    annualInterestRateHint: 'Valore predefinito 3,00%',
     monthlyBankCost: 'Costo banca mensile (€)',
     additionalAnnualPayment: 'Pagamento annuale extra (€)',
     additionalPaymentStrategy: 'Strategia pagamento extra',
@@ -270,7 +265,7 @@ const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     downPayment: 'Apport (€)',
     mortgageDurationYears: 'Durée du prêt (années)',
     annualInterestRate: 'Taux d’intérêt annuel',
-    annualInterestRateHint: 'Valeur par défaut: 0.03 (3%)',
+    annualInterestRateHint: 'Valeur par défaut : 3,00%',
     monthlyBankCost: 'Frais bancaires mensuels (€)',
     additionalAnnualPayment: 'Paiement annuel supplémentaire (€)',
     additionalPaymentStrategy: 'Stratégie paiement supplémentaire',
@@ -344,7 +339,7 @@ const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     downPayment: 'Anzahlung (€)',
     mortgageDurationYears: 'Laufzeit (Jahre)',
     annualInterestRate: 'Jährlicher Zinssatz',
-    annualInterestRateHint: 'Standardwert ist 0.03 (3%)',
+    annualInterestRateHint: 'Standardwert ist 3,00%',
     monthlyBankCost: 'Monatliche Bankkosten (€)',
     additionalAnnualPayment: 'Zusätzliche jährliche Zahlung (€)',
     additionalPaymentStrategy: 'Strategie für Zusatzzahlung',
@@ -509,7 +504,7 @@ function App() {
   const [houseCost, setHouseCost] = useState(250000)
   const [downPayment, setDownPayment] = useState(50000)
   const [years, setYears] = useState(25)
-  const [annualInterestRate, setAnnualInterestRate] = useState(0.03)
+  const [annualInterestRate, setAnnualInterestRate] = useState(3)
   const [monthlyBankCost, setMonthlyBankCost] = useState(0)
   const [additionalAnnualPayment, setAdditionalAnnualPayment] = useState(0)
   const [additionalPaymentStrategy, setAdditionalPaymentStrategy] =
@@ -521,7 +516,7 @@ function App() {
 
   const euroFormatter = useMemo(
     () =>
-      new Intl.NumberFormat(LOCALE_BY_LANGUAGE[language], {
+      new Intl.NumberFormat(EURO_NUMBER_LOCALE, {
         style: 'currency',
         currency: 'EUR',
         maximumFractionDigits: 2,
@@ -531,7 +526,7 @@ function App() {
 
   const pdfCurrencyFormatter = useMemo(
     () =>
-      new Intl.NumberFormat(LOCALE_BY_LANGUAGE[language], {
+      new Intl.NumberFormat(EURO_NUMBER_LOCALE, {
         style: 'currency',
         currency: 'EUR',
         maximumFractionDigits: 2,
@@ -545,7 +540,7 @@ function App() {
         houseCost,
         downPayment,
         years,
-        annualInterestRate,
+        annualInterestRate: annualInterestRate / 100,
         monthlyBankCost,
         additionalAnnualPayment,
         additionalPaymentStrategy,
@@ -559,7 +554,7 @@ function App() {
         houseCost,
         downPayment,
         years,
-        annualInterestRate,
+        annualInterestRate: annualInterestRate / 100,
         monthlyBankCost,
         additionalAnnualPayment: 0,
       }),
@@ -629,7 +624,7 @@ function App() {
       `${copy.pdfHouseCost}: ${formatCurrencyForPdf(pdfCurrencyFormatter, houseCost)}`,
       `${copy.pdfDownPayment}: ${formatCurrencyForPdf(pdfCurrencyFormatter, downPayment)}`,
       `${copy.pdfDuration}: ${years} ${copy.pdfYears}`,
-      `${copy.pdfAnnualInterestRate}: ${(annualInterestRate * 100).toFixed(2)}%`,
+      `${copy.pdfAnnualInterestRate}: ${annualInterestRate.toFixed(2).replace('.', ',')}%`,
       `${copy.pdfMonthlyBankCost}: ${formatCurrencyForPdf(pdfCurrencyFormatter, monthlyBankCost)}`,
       `${copy.pdfAdditionalAnnualPayment}: ${formatCurrencyForPdf(pdfCurrencyFormatter, additionalAnnualPayment)}`,
       `${copy.pdfAdditionalPaymentStrategy}: ${
@@ -721,6 +716,7 @@ function App() {
               min={0}
               step={10000}
               onValueChange={setHouseCost}
+              useGrouping
             />
             <InputField
               id="downPayment"
@@ -729,6 +725,7 @@ function App() {
               min={0}
               step={1000}
               onValueChange={setDownPayment}
+              useGrouping
             />
             <InputField
               id="years"
@@ -743,8 +740,9 @@ function App() {
               label={copy.annualInterestRate}
               value={annualInterestRate}
               min={0}
-              max={1}
-              step={0.001}
+              max={100}
+              step={0.01}
+              fractionDigits={2}
               onValueChange={setAnnualInterestRate}
               hint={copy.annualInterestRateHint}
             />
@@ -755,6 +753,8 @@ function App() {
               min={0}
               step={1}
               onValueChange={setMonthlyBankCost}
+              useGrouping
+              fractionDigits={2}
             />
             <InputField
               id="additionalAnnualPayment"
@@ -763,6 +763,7 @@ function App() {
               min={0}
               step={100}
               onValueChange={setAdditionalAnnualPayment}
+              useGrouping
             />
             <label className="block" htmlFor="additionalPaymentStrategy">
               <span className="text-sm font-medium text-slate-200">{copy.additionalPaymentStrategy}</span>
@@ -946,7 +947,7 @@ function InteractiveChart({ data, maxAmount, selectedYear, onYearChange }: Inter
   }, [maxYear, xTickStep])
   const compactNumberFormatter = useMemo(
     () =>
-      new Intl.NumberFormat(undefined, {
+      new Intl.NumberFormat(EURO_NUMBER_LOCALE, {
         notation: 'compact',
         maximumFractionDigits: 1,
       }),
@@ -1056,18 +1057,65 @@ type InputFieldProps = {
   max?: number
   step?: number
   hint?: string
+  fractionDigits?: number
+  useGrouping?: boolean
   onValueChange: (value: number) => void
 }
 
-function InputField({ id, label, value, min, max, step, hint, onValueChange }: InputFieldProps) {
-  const [draftValue, setDraftValue] = useState(value.toString())
+const parseEuropeanNumber = (rawValue: string): number => {
+  const normalized = rawValue
+    .replace(/\./g, '')
+    .replace(/\s/g, '')
+    .replace(',', '.')
+  return Number(normalized)
+}
+
+const countFractionDigits = (stepValue: number): number => {
+  const normalized = stepValue.toString().toLowerCase()
+  if (normalized.includes('e-')) {
+    return Number(normalized.split('e-')[1])
+  }
+
+  const decimals = normalized.split('.')[1]
+  return decimals ? decimals.length : 0
+}
+
+const roundToDigits = (value: number, digits: number): number => {
+  if (digits <= 0) {
+    return Math.round(value)
+  }
+
+  return Number(value.toFixed(digits))
+}
+
+const formatEuropeanNumber = (value: number, fractionDigits: number, useGrouping: boolean): string =>
+  new Intl.NumberFormat(EURO_NUMBER_LOCALE, {
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: fractionDigits,
+    useGrouping,
+  }).format(value)
+
+function InputField({
+  id,
+  label,
+  value,
+  min,
+  max,
+  step,
+  hint,
+  fractionDigits,
+  useGrouping = false,
+  onValueChange,
+}: InputFieldProps) {
+  const resolvedFractionDigits = fractionDigits ?? countFractionDigits(step ?? 1)
+  const [draftValue, setDraftValue] = useState(formatEuropeanNumber(value, resolvedFractionDigits, useGrouping))
   const [isFocused, setIsFocused] = useState(false)
 
   useEffect(() => {
     if (!isFocused) {
-      setDraftValue(value.toString())
+      setDraftValue(formatEuropeanNumber(value, resolvedFractionDigits, useGrouping))
     }
-  }, [isFocused, value])
+  }, [isFocused, resolvedFractionDigits, useGrouping, value])
 
   const commitValue = (rawValue: string) => {
     if (rawValue === '') {
@@ -1075,31 +1123,26 @@ function InputField({ id, label, value, min, max, step, hint, onValueChange }: I
       return
     }
 
-    const parsedValue = Number(rawValue)
+    const parsedValue = parseEuropeanNumber(rawValue)
 
     if (Number.isNaN(parsedValue)) {
       return
     }
 
-    onValueChange(parsedValue)
-  }
-
-  const formatDraftValue = (rawValue: string) => {
-    if (rawValue === '') {
-      return '0'
-    }
-
-    return rawValue
+    const roundedValue = roundToDigits(parsedValue, resolvedFractionDigits)
+    const clampedValue = Math.max(min ?? Number.NEGATIVE_INFINITY, Math.min(max ?? Number.POSITIVE_INFINITY, roundedValue))
+    onValueChange(clampedValue)
   }
 
   const handleStepChange = (direction: 'increase' | 'decrease') => {
     const increment = step ?? 1
-    const parsedDraftValue = Number(draftValue)
+    const parsedDraftValue = parseEuropeanNumber(draftValue)
     const baseValue = Number.isNaN(parsedDraftValue) ? value : parsedDraftValue
     const nextValue = direction === 'increase' ? baseValue + increment : baseValue - increment
-    const clampedValue = Math.max(min ?? Number.NEGATIVE_INFINITY, Math.min(max ?? Number.POSITIVE_INFINITY, nextValue))
+    const roundedValue = roundToDigits(nextValue, resolvedFractionDigits)
+    const clampedValue = Math.max(min ?? Number.NEGATIVE_INFINITY, Math.min(max ?? Number.POSITIVE_INFINITY, roundedValue))
     onValueChange(clampedValue)
-    setDraftValue(clampedValue.toString())
+    setDraftValue(formatEuropeanNumber(clampedValue, resolvedFractionDigits, useGrouping))
   }
 
   return (
@@ -1116,23 +1159,33 @@ function InputField({ id, label, value, min, max, step, hint, onValueChange }: I
         </button>
         <input
           id={id}
-          type="number"
+          type="text"
+          inputMode="decimal"
           className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 outline-none ring-emerald-400 focus:ring"
-          value={formatDraftValue(draftValue)}
-          min={min}
-          max={max}
-          step={step}
+          value={draftValue}
           onFocus={() => {
             setIsFocused(true)
-            if (draftValue === '0') {
+            if (parseEuropeanNumber(draftValue) === 0) {
               setDraftValue('')
             }
           }}
           onBlur={() => {
             setIsFocused(false)
             if (draftValue === '') {
-              setDraftValue('0')
+              setDraftValue(formatEuropeanNumber(0, resolvedFractionDigits, useGrouping))
+              return
             }
+
+            const parsedValue = parseEuropeanNumber(draftValue)
+            if (Number.isNaN(parsedValue)) {
+              setDraftValue(formatEuropeanNumber(value, resolvedFractionDigits, useGrouping))
+              return
+            }
+
+            const roundedValue = roundToDigits(parsedValue, resolvedFractionDigits)
+            const clampedValue = Math.max(min ?? Number.NEGATIVE_INFINITY, Math.min(max ?? Number.POSITIVE_INFINITY, roundedValue))
+            onValueChange(clampedValue)
+            setDraftValue(formatEuropeanNumber(clampedValue, resolvedFractionDigits, useGrouping))
           }}
           onChange={(event) => {
             const rawInput = event.target.value
