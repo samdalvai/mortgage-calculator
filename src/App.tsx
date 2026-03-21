@@ -672,15 +672,18 @@ function App() {
 
                   {selectedChartPoint ? (
                     <div className="mt-4 grid gap-2 text-sm sm:grid-cols-3">
-                      <SummaryItem
+                      <ChartLegendValue
+                        colorClassName="bg-violet-400"
                         label={`${copy.chartRemainingCapitalLegend} (${copy.yearLabel} ${selectedChartPoint.year})`}
                         value={euroFormatter.format(selectedChartPoint.remainingCapital)}
                       />
-                      <SummaryItem
+                      <ChartLegendValue
+                        colorClassName="bg-emerald-400"
                         label={`${copy.chartReimbursedCapitalLegend} (${copy.yearLabel} ${selectedChartPoint.year})`}
                         value={euroFormatter.format(selectedChartPoint.reimbursedCapital)}
                       />
-                      <SummaryItem
+                      <ChartLegendValue
+                        colorClassName="bg-cyan-400"
                         label={`${copy.chartInterestLegend} (${copy.yearLabel} ${selectedChartPoint.year})`}
                         value={euroFormatter.format(selectedChartPoint.paidInterest)}
                       />
@@ -764,9 +767,42 @@ function InteractiveChart({ data, maxAmount, selectedYear, onYearChange }: Inter
   const padding = { top: 16, right: 18, bottom: 40, left: 56 }
   const innerWidth = width - padding.left - padding.right
   const innerHeight = height - padding.top - padding.bottom
-  const xStep = data.length > 1 ? innerWidth / (data.length - 1) : 0
+  const xStep = data.length > 0 ? innerWidth / data.length : 0
+  const yTicks = 4
+  const xTickStep = useMemo(() => {
+    if (data.length <= 6) {
+      return 1
+    }
 
-  const xForIndex = (index: number) => padding.left + index * xStep
+    const rawStep = data.length / 6
+    const possibleSteps = [1, 2, 5, 10, 15, 20, 25, 30]
+    return possibleSteps.find((step) => step >= rawStep) ?? possibleSteps[possibleSteps.length - 1]
+  }, [data.length])
+  const xTicks = useMemo(() => {
+    const ticks = [0]
+
+    for (let year = xTickStep; year <= data.length; year += xTickStep) {
+      ticks.push(year)
+    }
+
+    if (ticks[ticks.length - 1] !== data.length) {
+      ticks.push(data.length)
+    }
+
+    return ticks
+  }, [data.length, xTickStep])
+  const compactNumberFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat(undefined, {
+        notation: 'compact',
+        maximumFractionDigits: 1,
+      }),
+    [],
+  )
+
+  const xForIndex = (index: number) => padding.left + (index + 1) * xStep
+  const xForYear = (year: number) =>
+    data.length === 0 ? padding.left : padding.left + (year / data.length) * innerWidth
   const yForValue = (value: number) => {
     if (maxAmount <= 0) {
       return padding.top + innerHeight
@@ -783,20 +819,21 @@ function InteractiveChart({ data, maxAmount, selectedYear, onYearChange }: Inter
   const updateYearFromClientX = (clientX: number, element: SVGSVGElement) => {
     const bounds = element.getBoundingClientRect()
     const relativeX = Math.min(Math.max(clientX - bounds.left - padding.left, 0), innerWidth)
-    const yearIndex = xStep === 0 ? 0 : Math.round(relativeX / xStep)
-    onYearChange(Math.min(Math.max(yearIndex + 1, 1), data.length))
+    const year = data.length === 0 ? 1 : Math.round((relativeX / innerWidth) * data.length)
+    onYearChange(Math.min(Math.max(year, 1), data.length))
   }
 
   return (
-    <div className="mt-4 rounded-md border border-slate-800 bg-slate-900/80 p-3">
+    <div className="mt-4 rounded-md border border-slate-800 bg-slate-900/80 p-2 sm:p-3">
       <svg
         viewBox={`0 0 ${width} ${height}`}
-        className="h-[260px] w-full cursor-crosshair"
+        className="h-[260px] w-full cursor-crosshair touch-pan-y"
         role="img"
         aria-label="Mortgage capital and interest chart"
         onClick={(event) => updateYearFromClientX(event.clientX, event.currentTarget)}
-        onMouseMove={(event) => {
-          if (event.buttons === 1) {
+        onPointerDown={(event) => updateYearFromClientX(event.clientX, event.currentTarget)}
+        onPointerMove={(event) => {
+          if (event.buttons === 1 || event.pointerType === 'touch') {
             updateYearFromClientX(event.clientX, event.currentTarget)
           }
         }}
@@ -814,15 +851,29 @@ function InteractiveChart({ data, maxAmount, selectedYear, onYearChange }: Inter
         <path d={linePath((point) => point.reimbursedCapital)} fill="none" className="stroke-emerald-400" strokeWidth={2.5} />
         <path d={linePath((point) => point.paidInterest)} fill="none" className="stroke-cyan-400" strokeWidth={2.5} />
 
-        {data.map((point, index) => (
+        {Array.from({ length: yTicks + 1 }, (_, index) => {
+          const tickValue = (maxAmount / yTicks) * index
+          const y = yForValue(tickValue)
+
+          return (
+            <g key={`y-tick-${index}`}>
+              <line x1={padding.left - 4} y1={y} x2={padding.left} y2={y} className="stroke-slate-500" />
+              <text x={padding.left - 8} y={y + 3} className="fill-slate-400 text-[10px]" textAnchor="end">
+                {compactNumberFormatter.format(tickValue)}
+              </text>
+            </g>
+          )
+        })}
+
+        {xTicks.map((tickYear) => (
           <text
-            key={point.year}
-            x={xForIndex(index)}
+            key={`x-tick-${tickYear}`}
+            x={xForYear(tickYear)}
             y={padding.top + innerHeight + 18}
-            className="fill-slate-400 text-[8px]"
+            className="fill-slate-400 text-[10px] sm:text-[11px]"
             textAnchor="middle"
           >
-            {point.year}
+            {tickYear}
           </text>
         ))}
 
@@ -956,6 +1007,26 @@ function SummaryItem({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-md border border-slate-700 bg-slate-950/60 p-3">
       <dt className="text-slate-400">{label}</dt>
+      <dd className="mt-1 font-semibold text-slate-100">{value}</dd>
+    </div>
+  )
+}
+
+function ChartLegendValue({
+  label,
+  value,
+  colorClassName,
+}: {
+  label: string
+  value: string
+  colorClassName: string
+}) {
+  return (
+    <div className="rounded-md border border-slate-700 bg-slate-950/60 p-3">
+      <dt className="flex items-center gap-2 text-slate-300">
+        <span className={`inline-block h-2.5 w-2.5 rounded-full ${colorClassName}`} aria-hidden />
+        <span>{label}</span>
+      </dt>
       <dd className="mt-1 font-semibold text-slate-100">{value}</dd>
     </div>
   )
