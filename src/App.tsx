@@ -20,6 +20,8 @@ type YearlyChartData = {
   interest: number
 }
 
+const roundToCents = (value: number): number => Math.round(value * 100) / 100
+
 function App() {
   const [houseCost, setHouseCost] = useState(250000)
   const [downPayment, setDownPayment] = useState(50000)
@@ -60,11 +62,13 @@ function App() {
       })
     })
 
-    return Array.from(yearlyMap.values()).map((item) => ({
-      ...item,
-      principal: roundToCents(item.principal),
-      interest: roundToCents(item.interest),
-    }))
+    return Array.from(yearlyMap.values())
+      .sort((first, second) => first.year - second.year)
+      .map((item) => ({
+        ...item,
+        principal: roundToCents(item.principal),
+        interest: roundToCents(item.interest),
+      }))
   }, [plan.installments])
 
   return (
@@ -181,6 +185,8 @@ function App() {
                 <SummaryItem label="Annual interest rate" value={percentFormatter.format(annualInterestRate)} />
                 <SummaryItem label="Monthly bank cost" value={euroFormatter.format(monthlyBankCost)} />
                 <SummaryItem label="Financed amount" value={euroFormatter.format(plan.principal)} />
+                <SummaryItem label="Monthly payment" value={euroFormatter.format(plan.monthlyPayment)} />
+                <SummaryItem label="Total interest" value={euroFormatter.format(plan.totalInterest)} />
               </dl>
 
               <MortgageBreakdownChart data={yearlyChartData} />
@@ -300,7 +306,5 @@ function MortgageBreakdownChart({ data }: { data: YearlyChartData[] }) {
     </div>
   )
 }
-
-const roundToCents = (value: number): number => Math.round(value * 100) / 100
 
 export default App
