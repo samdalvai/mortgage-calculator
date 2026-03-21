@@ -30,6 +30,12 @@ type Translation = {
   capitalPaid: string
   interestPaid: string
   capitalPlusInterest: string
+  selectedInputs: string
+  chartTitle: string
+  chartSubtitle: string
+  yearLabel: string
+  chartCapitalLegend: string
+  chartInterestLegend: string
   houseCost: string
   downPayment: string
   mortgageDurationYears: string
@@ -92,6 +98,12 @@ const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     capitalPaid: 'Capital paid',
     interestPaid: 'Interest paid',
     capitalPlusInterest: 'Capital + interest',
+    selectedInputs: 'Selected inputs',
+    chartTitle: 'Capital vs interest paid over time',
+    chartSubtitle: 'Yearly totals across the mortgage duration',
+    yearLabel: 'Year',
+    chartCapitalLegend: 'Capital paid',
+    chartInterestLegend: 'Interest paid',
     houseCost: 'House cost (€)',
     downPayment: 'Down payment (€)',
     mortgageDurationYears: 'Mortgage duration (years)',
@@ -145,6 +157,12 @@ const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     capitalPaid: 'Capitale pagato',
     interestPaid: 'Interessi pagati',
     capitalPlusInterest: 'Capitale + interessi',
+    selectedInputs: 'Valori selezionati',
+    chartTitle: 'Capitale vs interessi pagati nel tempo',
+    chartSubtitle: 'Totali annuali lungo la durata del mutuo',
+    yearLabel: 'Anno',
+    chartCapitalLegend: 'Capitale pagato',
+    chartInterestLegend: 'Interessi pagati',
     houseCost: 'Costo casa (€)',
     downPayment: 'Anticipo (€)',
     mortgageDurationYears: 'Durata mutuo (anni)',
@@ -199,6 +217,12 @@ const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     capitalPaid: 'Capital remboursé',
     interestPaid: 'Intérêts payés',
     capitalPlusInterest: 'Capital + intérêts',
+    selectedInputs: 'Paramètres sélectionnés',
+    chartTitle: 'Capital vs intérêts payés au fil du temps',
+    chartSubtitle: 'Totaux annuels sur toute la durée du prêt',
+    yearLabel: 'Année',
+    chartCapitalLegend: 'Capital remboursé',
+    chartInterestLegend: 'Intérêts payés',
     houseCost: 'Coût du logement (€)',
     downPayment: 'Apport (€)',
     mortgageDurationYears: 'Durée du prêt (années)',
@@ -253,6 +277,12 @@ const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     capitalPaid: 'Gezahltes Kapital',
     interestPaid: 'Gezahlte Zinsen',
     capitalPlusInterest: 'Kapital + Zinsen',
+    selectedInputs: 'Ausgewählte Eingaben',
+    chartTitle: 'Gezahltes Kapital vs. Zinsen im Zeitverlauf',
+    chartSubtitle: 'Jährliche Summen über die gesamte Laufzeit',
+    yearLabel: 'Jahr',
+    chartCapitalLegend: 'Gezahltes Kapital',
+    chartInterestLegend: 'Gezahlte Zinsen',
     houseCost: 'Immobilienpreis (€)',
     downPayment: 'Anzahlung (€)',
     mortgageDurationYears: 'Laufzeit (Jahre)',
@@ -444,6 +474,31 @@ function App() {
     [annualInterestRate, downPayment, houseCost, monthlyBankCost, years],
   )
 
+  const yearlyBreakdown = useMemo(() => {
+    const totalsByYear = new Map<number, { principal: number; interest: number }>()
+
+    plan.installments.forEach((installment) => {
+      const year = Math.ceil(installment.month / 12)
+      const currentYear = totalsByYear.get(year) ?? { principal: 0, interest: 0 }
+      currentYear.principal += installment.principal
+      currentYear.interest += installment.interest
+      totalsByYear.set(year, currentYear)
+    })
+
+    return Array.from(totalsByYear.entries())
+      .sort(([firstYear], [secondYear]) => firstYear - secondYear)
+      .map(([year, totals]) => ({
+        year,
+        principal: totals.principal,
+        interest: totals.interest,
+      }))
+  }, [plan.installments])
+
+  const maxYearlyAmount = useMemo(
+    () => Math.max(...yearlyBreakdown.map((bucket) => Math.max(bucket.principal, bucket.interest)), 0),
+    [yearlyBreakdown],
+  )
+
   const handleExportPlanAsPdf = () => {
     const lines = [
       copy.pdfTitle,
@@ -584,6 +639,66 @@ function App() {
               <SummaryItem label={copy.totalBankCosts} value={euroFormatter.format(plan.totalBankCosts)} />
               <SummaryItem label={copy.totalPaid} value={euroFormatter.format(plan.totalPaid)} />
             </dl>
+
+            <div className="mt-6 rounded-lg border border-slate-700 bg-slate-950/60 p-4">
+              <h3 className="text-base font-semibold text-slate-100">{copy.selectedInputs}</h3>
+              <dl className="mt-3 grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+                <SummaryItem label={copy.houseCost} value={euroFormatter.format(houseCost)} />
+                <SummaryItem label={copy.downPayment} value={euroFormatter.format(downPayment)} />
+                <SummaryItem label={copy.mortgageDurationYears} value={`${years}`} />
+                <SummaryItem label={copy.annualInterestRate} value={`${(annualInterestRate * 100).toFixed(2)}%`} />
+                <SummaryItem label={copy.monthlyBankCost} value={euroFormatter.format(monthlyBankCost)} />
+              </dl>
+            </div>
+
+            <div className="mt-6 rounded-lg border border-slate-700 bg-slate-950/60 p-4">
+              <h3 className="text-base font-semibold text-slate-100">{copy.chartTitle}</h3>
+              <p className="mt-1 text-xs text-slate-400">{copy.chartSubtitle}</p>
+
+              <div className="mt-4 space-y-3">
+                {yearlyBreakdown.map((bucket) => {
+                  const principalWidth = maxYearlyAmount === 0 ? 0 : (bucket.principal / maxYearlyAmount) * 100
+                  const interestWidth = maxYearlyAmount === 0 ? 0 : (bucket.interest / maxYearlyAmount) * 100
+
+                  return (
+                    <div key={bucket.year} className="rounded-md border border-slate-800 bg-slate-900/80 p-3">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                        {copy.yearLabel} {bucket.year}
+                      </p>
+                      <div className="mt-2 grid gap-2">
+                        <div>
+                          <div className="mb-1 flex items-center justify-between text-xs">
+                            <span className="text-emerald-300">{copy.chartCapitalLegend}</span>
+                            <span className="font-medium text-slate-100">{euroFormatter.format(bucket.principal)}</span>
+                          </div>
+                          <div className="h-2 rounded-full bg-slate-800">
+                            <div
+                              className="h-2 rounded-full bg-emerald-500"
+                              style={{ width: `${principalWidth}%` }}
+                              aria-label={`${copy.chartCapitalLegend} ${copy.yearLabel} ${bucket.year}`}
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <div className="mb-1 flex items-center justify-between text-xs">
+                            <span className="text-cyan-300">{copy.chartInterestLegend}</span>
+                            <span className="font-medium text-slate-100">{euroFormatter.format(bucket.interest)}</span>
+                          </div>
+                          <div className="h-2 rounded-full bg-slate-800">
+                            <div
+                              className="h-2 rounded-full bg-cyan-500"
+                              style={{ width: `${interestWidth}%` }}
+                              aria-label={`${copy.chartInterestLegend} ${copy.yearLabel} ${bucket.year}`}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
 
             <div className="mt-5 flex flex-wrap gap-3">
               <button
