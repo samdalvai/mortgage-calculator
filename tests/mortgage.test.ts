@@ -58,9 +58,51 @@ function testZeroInterest() {
   assertEqual(result.installments[result.installments.length - 1].remainingPrincipal, 0, 'zero-interest last remaining principal')
 }
 
+function testAdditionalAnnualPaymentShortensDuration() {
+  const baseline = calculateMortgagePlan({
+    houseCost: 250_000,
+    downPayment: 50_000,
+    years: 25,
+    annualInterestRate: 0.03,
+    monthlyBankCost: 0,
+  })
+  const accelerated = calculateMortgagePlan({
+    houseCost: 250_000,
+    downPayment: 50_000,
+    years: 25,
+    annualInterestRate: 0.03,
+    monthlyBankCost: 0,
+    additionalAnnualPayment: 5_000,
+    additionalPaymentStrategy: 'shorten-duration',
+  })
+
+  assert(accelerated.durationMonths < baseline.durationMonths, 'additional payment should shorten duration')
+  assert(accelerated.totalInterest < baseline.totalInterest, 'additional payment should reduce total interest')
+  assert(accelerated.totalAdditionalPayments > 0, 'additional payment total should be tracked')
+}
+
+function testAdditionalAnnualPaymentCanReduceMonthlyPayment() {
+  const recast = calculateMortgagePlan({
+    houseCost: 300_000,
+    downPayment: 50_000,
+    years: 30,
+    annualInterestRate: 0.035,
+    monthlyBankCost: 0,
+    additionalAnnualPayment: 4_000,
+    additionalPaymentStrategy: 'reduce-payment',
+  })
+
+  const month12 = recast.installments[11]
+  const month13 = recast.installments[12]
+  assert(month12.additionalPayment > 0, 'month 12 should include annual additional payment')
+  assert(month13.principal < month12.principal, 'after recast, principal component should decrease due to lower monthly payment')
+}
+
 function runTests() {
   testFrenchMortgageWithInterestAndBankCost()
   testZeroInterest()
+  testAdditionalAnnualPaymentShortensDuration()
+  testAdditionalAnnualPaymentCanReduceMonthlyPayment()
   assert(true, 'all tests completed')
 }
 
