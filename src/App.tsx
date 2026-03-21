@@ -30,11 +30,11 @@ type Translation = {
   capitalPaid: string
   interestPaid: string
   capitalPlusInterest: string
-  selectedInputs: string
   chartTitle: string
   chartSubtitle: string
   yearLabel: string
-  chartCapitalLegend: string
+  chartReimbursedCapitalLegend: string
+  chartRemainingCapitalLegend: string
   chartInterestLegend: string
   houseCost: string
   downPayment: string
@@ -98,12 +98,12 @@ const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     capitalPaid: 'Capital paid',
     interestPaid: 'Interest paid',
     capitalPlusInterest: 'Capital + interest',
-    selectedInputs: 'Selected inputs',
     chartTitle: 'Capital vs interest paid over time',
-    chartSubtitle: 'Yearly totals across the mortgage duration',
+    chartSubtitle: 'Click the chart to inspect values over time',
     yearLabel: 'Year',
-    chartCapitalLegend: 'Capital paid',
-    chartInterestLegend: 'Interest paid',
+    chartReimbursedCapitalLegend: 'Reimbursed capital',
+    chartRemainingCapitalLegend: 'Remaining capital',
+    chartInterestLegend: 'Paid interest',
     houseCost: 'House cost (€)',
     downPayment: 'Down payment (€)',
     mortgageDurationYears: 'Mortgage duration (years)',
@@ -157,11 +157,11 @@ const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     capitalPaid: 'Capitale pagato',
     interestPaid: 'Interessi pagati',
     capitalPlusInterest: 'Capitale + interessi',
-    selectedInputs: 'Valori selezionati',
     chartTitle: 'Capitale vs interessi pagati nel tempo',
-    chartSubtitle: 'Totali annuali lungo la durata del mutuo',
+    chartSubtitle: 'Fai clic sul grafico per vedere i valori nel tempo',
     yearLabel: 'Anno',
-    chartCapitalLegend: 'Capitale pagato',
+    chartReimbursedCapitalLegend: 'Capitale rimborsato',
+    chartRemainingCapitalLegend: 'Capitale residuo',
     chartInterestLegend: 'Interessi pagati',
     houseCost: 'Costo casa (€)',
     downPayment: 'Anticipo (€)',
@@ -217,11 +217,11 @@ const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     capitalPaid: 'Capital remboursé',
     interestPaid: 'Intérêts payés',
     capitalPlusInterest: 'Capital + intérêts',
-    selectedInputs: 'Paramètres sélectionnés',
     chartTitle: 'Capital vs intérêts payés au fil du temps',
-    chartSubtitle: 'Totaux annuels sur toute la durée du prêt',
+    chartSubtitle: 'Cliquez sur le graphique pour inspecter les valeurs dans le temps',
     yearLabel: 'Année',
-    chartCapitalLegend: 'Capital remboursé',
+    chartReimbursedCapitalLegend: 'Capital remboursé',
+    chartRemainingCapitalLegend: 'Capital restant',
     chartInterestLegend: 'Intérêts payés',
     houseCost: 'Coût du logement (€)',
     downPayment: 'Apport (€)',
@@ -277,11 +277,11 @@ const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     capitalPaid: 'Gezahltes Kapital',
     interestPaid: 'Gezahlte Zinsen',
     capitalPlusInterest: 'Kapital + Zinsen',
-    selectedInputs: 'Ausgewählte Eingaben',
     chartTitle: 'Gezahltes Kapital vs. Zinsen im Zeitverlauf',
-    chartSubtitle: 'Jährliche Summen über die gesamte Laufzeit',
+    chartSubtitle: 'Klicken Sie auf das Diagramm, um Werte über die Zeit zu sehen',
     yearLabel: 'Jahr',
-    chartCapitalLegend: 'Gezahltes Kapital',
+    chartReimbursedCapitalLegend: 'Getilgtes Kapital',
+    chartRemainingCapitalLegend: 'Restkapital',
     chartInterestLegend: 'Gezahlte Zinsen',
     houseCost: 'Immobilienpreis (€)',
     downPayment: 'Anzahlung (€)',
@@ -439,6 +439,7 @@ function App() {
   const [annualInterestRate, setAnnualInterestRate] = useState(0.03)
   const [monthlyBankCost, setMonthlyBankCost] = useState(0)
   const [showPlan, setShowPlan] = useState(false)
+  const [selectedChartYear, setSelectedChartYear] = useState(1)
 
   const copy = TRANSLATIONS[language]
 
@@ -474,30 +475,46 @@ function App() {
     [annualInterestRate, downPayment, houseCost, monthlyBankCost, years],
   )
 
-  const yearlyBreakdown = useMemo(() => {
-    const totalsByYear = new Map<number, { principal: number; interest: number }>()
+  const chartData = useMemo(() => {
+    let reimbursedCapital = 0
+    let paidInterest = 0
 
-    plan.installments.forEach((installment) => {
-      const year = Math.ceil(installment.month / 12)
-      const currentYear = totalsByYear.get(year) ?? { principal: 0, interest: 0 }
-      currentYear.principal += installment.principal
-      currentYear.interest += installment.interest
-      totalsByYear.set(year, currentYear)
-    })
+    return Array.from({ length: years }, (_, index) => {
+      const year = index + 1
+      const yearStart = index * 12
+      const yearEnd = Math.min((index + 1) * 12, plan.installments.length)
+      const yearInstallments = plan.installments.slice(yearStart, yearEnd)
+      const installmentIndex = Math.min(yearEnd, plan.installments.length) - 1
+      const installment = plan.installments[Math.max(installmentIndex, 0)]
 
-    return Array.from(totalsByYear.entries())
-      .sort(([firstYear], [secondYear]) => firstYear - secondYear)
-      .map(([year, totals]) => ({
+      reimbursedCapital += yearInstallments.reduce((sum, currentInstallment) => sum + currentInstallment.principal, 0)
+      paidInterest += yearInstallments.reduce((sum, currentInstallment) => sum + currentInstallment.interest, 0)
+
+      return {
         year,
-        principal: totals.principal,
-        interest: totals.interest,
-      }))
-  }, [plan.installments])
+        remainingCapital: installment?.remainingPrincipal ?? 0,
+        reimbursedCapital,
+        paidInterest,
+      }
+    })
+  }, [plan.installments, years])
 
-  const maxYearlyAmount = useMemo(
-    () => Math.max(...yearlyBreakdown.map((bucket) => Math.max(bucket.principal, bucket.interest)), 0),
-    [yearlyBreakdown],
+  useEffect(() => {
+    if (selectedChartYear > chartData.length) {
+      setSelectedChartYear(chartData.length)
+    }
+  }, [chartData.length, selectedChartYear])
+
+  const maxChartAmount = useMemo(
+    () =>
+      Math.max(
+        ...chartData.map((point) => Math.max(point.remainingCapital, point.reimbursedCapital, point.paidInterest)),
+        0,
+      ),
+    [chartData],
   )
+
+  const selectedChartPoint = chartData[Math.max(selectedChartYear - 1, 0)] ?? null
 
   const handleExportPlanAsPdf = () => {
     const lines = [
@@ -641,63 +658,36 @@ function App() {
             </dl>
 
             <div className="mt-6 rounded-lg border border-slate-700 bg-slate-950/60 p-4">
-              <h3 className="text-base font-semibold text-slate-100">{copy.selectedInputs}</h3>
-              <dl className="mt-3 grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
-                <SummaryItem label={copy.houseCost} value={euroFormatter.format(houseCost)} />
-                <SummaryItem label={copy.downPayment} value={euroFormatter.format(downPayment)} />
-                <SummaryItem label={copy.mortgageDurationYears} value={`${years}`} />
-                <SummaryItem label={copy.annualInterestRate} value={`${(annualInterestRate * 100).toFixed(2)}%`} />
-                <SummaryItem label={copy.monthlyBankCost} value={euroFormatter.format(monthlyBankCost)} />
-              </dl>
-            </div>
-
-            <div className="mt-6 rounded-lg border border-slate-700 bg-slate-950/60 p-4">
               <h3 className="text-base font-semibold text-slate-100">{copy.chartTitle}</h3>
               <p className="mt-1 text-xs text-slate-400">{copy.chartSubtitle}</p>
 
-              <div className="mt-4 space-y-3">
-                {yearlyBreakdown.map((bucket) => {
-                  const principalWidth = maxYearlyAmount === 0 ? 0 : (bucket.principal / maxYearlyAmount) * 100
-                  const interestWidth = maxYearlyAmount === 0 ? 0 : (bucket.interest / maxYearlyAmount) * 100
+              {chartData.length > 0 ? (
+                <>
+                  <InteractiveChart
+                    data={chartData}
+                    maxAmount={maxChartAmount}
+                    selectedYear={selectedChartYear}
+                    onYearChange={setSelectedChartYear}
+                  />
 
-                  return (
-                    <div key={bucket.year} className="rounded-md border border-slate-800 bg-slate-900/80 p-3">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                        {copy.yearLabel} {bucket.year}
-                      </p>
-                      <div className="mt-2 grid gap-2">
-                        <div>
-                          <div className="mb-1 flex items-center justify-between text-xs">
-                            <span className="text-emerald-300">{copy.chartCapitalLegend}</span>
-                            <span className="font-medium text-slate-100">{euroFormatter.format(bucket.principal)}</span>
-                          </div>
-                          <div className="h-2 rounded-full bg-slate-800">
-                            <div
-                              className="h-2 rounded-full bg-emerald-500"
-                              style={{ width: `${principalWidth}%` }}
-                              aria-label={`${copy.chartCapitalLegend} ${copy.yearLabel} ${bucket.year}`}
-                            />
-                          </div>
-                        </div>
-
-                        <div>
-                          <div className="mb-1 flex items-center justify-between text-xs">
-                            <span className="text-cyan-300">{copy.chartInterestLegend}</span>
-                            <span className="font-medium text-slate-100">{euroFormatter.format(bucket.interest)}</span>
-                          </div>
-                          <div className="h-2 rounded-full bg-slate-800">
-                            <div
-                              className="h-2 rounded-full bg-cyan-500"
-                              style={{ width: `${interestWidth}%` }}
-                              aria-label={`${copy.chartInterestLegend} ${copy.yearLabel} ${bucket.year}`}
-                            />
-                          </div>
-                        </div>
-                      </div>
+                  {selectedChartPoint ? (
+                    <div className="mt-4 grid gap-2 text-sm sm:grid-cols-3">
+                      <SummaryItem
+                        label={`${copy.chartRemainingCapitalLegend} (${copy.yearLabel} ${selectedChartPoint.year})`}
+                        value={euroFormatter.format(selectedChartPoint.remainingCapital)}
+                      />
+                      <SummaryItem
+                        label={`${copy.chartReimbursedCapitalLegend} (${copy.yearLabel} ${selectedChartPoint.year})`}
+                        value={euroFormatter.format(selectedChartPoint.reimbursedCapital)}
+                      />
+                      <SummaryItem
+                        label={`${copy.chartInterestLegend} (${copy.yearLabel} ${selectedChartPoint.year})`}
+                        value={euroFormatter.format(selectedChartPoint.paidInterest)}
+                      />
                     </div>
-                  )
-                })}
-              </div>
+                  ) : null}
+                </>
+              ) : null}
             </div>
 
             <div className="mt-5 flex flex-wrap gap-3">
@@ -751,6 +741,108 @@ function App() {
         </div>
       </section>
     </main>
+  )
+}
+
+type ChartPoint = {
+  year: number
+  remainingCapital: number
+  reimbursedCapital: number
+  paidInterest: number
+}
+
+type InteractiveChartProps = {
+  data: ChartPoint[]
+  maxAmount: number
+  selectedYear: number
+  onYearChange: (year: number) => void
+}
+
+function InteractiveChart({ data, maxAmount, selectedYear, onYearChange }: InteractiveChartProps) {
+  const width = 900
+  const height = 320
+  const padding = { top: 16, right: 18, bottom: 40, left: 56 }
+  const innerWidth = width - padding.left - padding.right
+  const innerHeight = height - padding.top - padding.bottom
+  const xStep = data.length > 1 ? innerWidth / (data.length - 1) : 0
+
+  const xForIndex = (index: number) => padding.left + index * xStep
+  const yForValue = (value: number) => {
+    if (maxAmount <= 0) {
+      return padding.top + innerHeight
+    }
+
+    return padding.top + innerHeight - (value / maxAmount) * innerHeight
+  }
+
+  const linePath = (extractor: (point: ChartPoint) => number) =>
+    data
+      .map((point, index) => `${index === 0 ? 'M' : 'L'} ${xForIndex(index)} ${yForValue(extractor(point))}`)
+      .join(' ')
+
+  const updateYearFromClientX = (clientX: number, element: SVGSVGElement) => {
+    const bounds = element.getBoundingClientRect()
+    const relativeX = Math.min(Math.max(clientX - bounds.left - padding.left, 0), innerWidth)
+    const yearIndex = xStep === 0 ? 0 : Math.round(relativeX / xStep)
+    onYearChange(Math.min(Math.max(yearIndex + 1, 1), data.length))
+  }
+
+  return (
+    <div className="mt-4 rounded-md border border-slate-800 bg-slate-900/80 p-3">
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        className="h-[260px] w-full cursor-crosshair"
+        role="img"
+        aria-label="Mortgage capital and interest chart"
+        onClick={(event) => updateYearFromClientX(event.clientX, event.currentTarget)}
+        onMouseMove={(event) => {
+          if (event.buttons === 1) {
+            updateYearFromClientX(event.clientX, event.currentTarget)
+          }
+        }}
+      >
+        <line
+          x1={padding.left}
+          y1={padding.top + innerHeight}
+          x2={padding.left + innerWidth}
+          y2={padding.top + innerHeight}
+          className="stroke-slate-600"
+        />
+        <line x1={padding.left} y1={padding.top} x2={padding.left} y2={padding.top + innerHeight} className="stroke-slate-600" />
+
+        <path d={linePath((point) => point.remainingCapital)} fill="none" className="stroke-violet-400" strokeWidth={2.5} />
+        <path d={linePath((point) => point.reimbursedCapital)} fill="none" className="stroke-emerald-400" strokeWidth={2.5} />
+        <path d={linePath((point) => point.paidInterest)} fill="none" className="stroke-cyan-400" strokeWidth={2.5} />
+
+        {data.map((point, index) => (
+          <text
+            key={point.year}
+            x={xForIndex(index)}
+            y={padding.top + innerHeight + 18}
+            className="fill-slate-400 text-[8px]"
+            textAnchor="middle"
+          >
+            {point.year}
+          </text>
+        ))}
+
+        {selectedYear >= 1 && selectedYear <= data.length ? (
+          <>
+            <line
+              x1={xForIndex(selectedYear - 1)}
+              y1={padding.top}
+              x2={xForIndex(selectedYear - 1)}
+              y2={padding.top + innerHeight}
+              className="stroke-slate-300"
+              strokeDasharray="4 4"
+            />
+            <circle cx={xForIndex(selectedYear - 1)} cy={yForValue(data[selectedYear - 1].remainingCapital)} r={4} className="fill-violet-300" />
+            <circle cx={xForIndex(selectedYear - 1)} cy={yForValue(data[selectedYear - 1].reimbursedCapital)} r={4} className="fill-emerald-300" />
+            <circle cx={xForIndex(selectedYear - 1)} cy={yForValue(data[selectedYear - 1].paidInterest)} r={4} className="fill-cyan-300" />
+          </>
+        ) : null}
+      </svg>
+    </div>
   )
 }
 
