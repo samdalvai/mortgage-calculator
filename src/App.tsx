@@ -1229,7 +1229,7 @@ function InputField({
           type="button"
           onClick={() => handleStepChange('decrease')}
           onPointerDown={(event) => {
-            if (event.button !== 0) {
+            if (event.pointerType === 'mouse' && event.button !== 0) {
               return
             }
 
@@ -1283,7 +1283,7 @@ function InputField({
           type="button"
           onClick={() => handleStepChange('increase')}
           onPointerDown={(event) => {
-            if (event.button !== 0) {
+            if (event.pointerType === 'mouse' && event.button !== 0) {
               return
             }
 
