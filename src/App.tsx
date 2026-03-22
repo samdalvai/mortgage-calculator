@@ -1101,6 +1101,7 @@ type InputFieldProps = {
 
 const LONG_PRESS_INITIAL_DELAY_MS = 400
 const LONG_PRESS_REPEAT_INTERVAL_MS = 80
+const IGNORE_MOUSE_AFTER_TOUCH_MS = 750
 
 const parseEuropeanNumber = (rawValue: string): number => {
   const normalized = rawValue
@@ -1152,6 +1153,8 @@ function InputField({
   const [isFocused, setIsFocused] = useState(false)
   const holdStartTimeoutRef = useRef<number | null>(null)
   const holdIntervalRef = useRef<number | null>(null)
+  const longPressTriggeredRef = useRef(false)
+  const ignoreMouseUntilRef = useRef(0)
 
   useEffect(() => {
     if (!isFocused) {
@@ -1213,12 +1216,30 @@ function InputField({
 
   const startContinuousStepChange = (direction: 'increase' | 'decrease') => {
     stopContinuousStepChange()
+    longPressTriggeredRef.current = false
     holdStartTimeoutRef.current = window.setTimeout(() => {
+      longPressTriggeredRef.current = true
       handleStepChange(direction)
       holdIntervalRef.current = window.setInterval(() => {
         handleStepChange(direction)
       }, LONG_PRESS_REPEAT_INTERVAL_MS)
     }, LONG_PRESS_INITIAL_DELAY_MS)
+  }
+
+  const isMousePressIgnored = () => Date.now() < ignoreMouseUntilRef.current
+
+  const handlePressStart = (direction: 'increase' | 'decrease') => {
+    startContinuousStepChange(direction)
+  }
+
+  const handlePressEnd = (direction: 'increase' | 'decrease') => {
+    const shouldApplySingleStep = !longPressTriggeredRef.current
+    stopContinuousStepChange()
+    longPressTriggeredRef.current = false
+
+    if (shouldApplySingleStep) {
+      handleStepChange(direction)
+    }
   }
 
   return (
@@ -1227,17 +1248,21 @@ function InputField({
       <div className="mt-1 flex gap-2">
         <button
           type="button"
-          onClick={() => handleStepChange('decrease')}
-          onPointerDown={(event) => {
-            if (event.pointerType === 'mouse' && event.button !== 0) {
+          onMouseDown={(event) => {
+            if (event.button !== 0 || isMousePressIgnored()) {
               return
             }
 
-            startContinuousStepChange('decrease')
+            handlePressStart('decrease')
           }}
-          onPointerUp={stopContinuousStepChange}
-          onPointerCancel={stopContinuousStepChange}
-          onPointerLeave={stopContinuousStepChange}
+          onMouseUp={() => handlePressEnd('decrease')}
+          onMouseLeave={stopContinuousStepChange}
+          onTouchStart={() => {
+            ignoreMouseUntilRef.current = Date.now() + IGNORE_MOUSE_AFTER_TOUCH_MS
+            handlePressStart('decrease')
+          }}
+          onTouchEnd={() => handlePressEnd('decrease')}
+          onTouchCancel={stopContinuousStepChange}
           className="rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-lg font-semibold text-slate-100 transition hover:border-emerald-400 hover:text-emerald-300"
           aria-label={`Decrease ${label}`}
         >
@@ -1281,17 +1306,21 @@ function InputField({
         />
         <button
           type="button"
-          onClick={() => handleStepChange('increase')}
-          onPointerDown={(event) => {
-            if (event.pointerType === 'mouse' && event.button !== 0) {
+          onMouseDown={(event) => {
+            if (event.button !== 0 || isMousePressIgnored()) {
               return
             }
 
-            startContinuousStepChange('increase')
+            handlePressStart('increase')
           }}
-          onPointerUp={stopContinuousStepChange}
-          onPointerCancel={stopContinuousStepChange}
-          onPointerLeave={stopContinuousStepChange}
+          onMouseUp={() => handlePressEnd('increase')}
+          onMouseLeave={stopContinuousStepChange}
+          onTouchStart={() => {
+            ignoreMouseUntilRef.current = Date.now() + IGNORE_MOUSE_AFTER_TOUCH_MS
+            handlePressStart('increase')
+          }}
+          onTouchEnd={() => handlePressEnd('increase')}
+          onTouchCancel={stopContinuousStepChange}
           className="rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-lg font-semibold text-slate-100 transition hover:border-emerald-400 hover:text-emerald-300"
           aria-label={`Increase ${label}`}
         >
