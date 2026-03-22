@@ -534,7 +534,7 @@ function App() {
         currency: 'EUR',
         maximumFractionDigits: 2,
       }),
-    [language],
+    [],
   )
 
   const pdfCurrencyFormatter = useMemo(
@@ -544,7 +544,7 @@ function App() {
         currency: 'EUR',
         maximumFractionDigits: 2,
       }),
-    [language],
+    [],
   )
 
   const plan = useMemo(
