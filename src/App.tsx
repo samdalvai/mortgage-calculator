@@ -953,7 +953,7 @@ type InteractiveChartProps = {
 
 function InteractiveChart({ data, maxAmount, selectedYear, onYearChange }: InteractiveChartProps) {
   const width = 900
-  const height = 320
+  const height = 650
   const padding = { top: 16, right: 18, bottom: 40, left: 56 }
   const innerWidth = width - padding.left - padding.right
   const innerHeight = height - padding.top - padding.bottom
