@@ -952,9 +952,9 @@ type InteractiveChartProps = {
 }
 
 function InteractiveChart({ data, maxAmount, selectedYear, onYearChange }: InteractiveChartProps) {
-  const width = 900
+  const width = 1200
   const height = 650
-  const padding = { top: 16, right: 18, bottom: 40, left: 56 }
+  const padding = { top: 20, right: 24, bottom: 40, left: 112 }
   const innerWidth = width - padding.left - padding.right
   const innerHeight = height - padding.top - padding.bottom
   const xStep = data.length > 1 ? innerWidth / (data.length - 1) : 0
@@ -982,10 +982,9 @@ function InteractiveChart({ data, maxAmount, selectedYear, onYearChange }: Inter
 
     return ticks
   }, [maxYear, xTickStep])
-  const compactNumberFormatter = useMemo(
+  const yAxisFormatter = useMemo(
     () =>
       new Intl.NumberFormat(EURO_NUMBER_LOCALE, {
-        notation: 'compact',
         maximumFractionDigits: 1,
       }),
     [],
@@ -1011,7 +1010,7 @@ function InteractiveChart({ data, maxAmount, selectedYear, onYearChange }: Inter
     <div className="mt-4 rounded-md border border-slate-800 bg-slate-900/80 p-2 sm:p-3">
       <svg
         viewBox={`0 0 ${width} ${height}`}
-        className="h-[260px] w-full"
+        className="h-[250px] w-full"
         role="img"
         aria-label="Mortgage capital and interest chart"
       >
@@ -1034,9 +1033,9 @@ function InteractiveChart({ data, maxAmount, selectedYear, onYearChange }: Inter
 
           return (
             <g key={`y-tick-${index}`}>
-              <line x1={padding.left - 4} y1={y} x2={padding.left} y2={y} className="stroke-slate-500" />
-              <text x={padding.left - 8} y={y + 3} className="fill-slate-400 text-[10px]" textAnchor="end">
-                {compactNumberFormatter.format(tickValue)}
+              <line x1={padding.left - 6} y1={y} x2={padding.left} y2={y} className="stroke-slate-500" />
+              <text x={padding.left - 12} y={y + 6} className="fill-slate-400 text-[20px]" textAnchor="end">
+                {`${yAxisFormatter.format(tickValue / 1000)} K`}
               </text>
             </g>
           )
@@ -1046,8 +1045,8 @@ function InteractiveChart({ data, maxAmount, selectedYear, onYearChange }: Inter
           <text
             key={`x-tick-${tickYear}`}
             x={xForYear(tickYear)}
-            y={padding.top + innerHeight + 18}
-            className="fill-slate-400 text-[10px] sm:text-[11px]"
+            y={padding.top + innerHeight + 34}
+            className="fill-slate-400 text-[20px]"
             textAnchor="middle"
           >
             {tickYear}
