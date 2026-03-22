@@ -409,7 +409,14 @@ const getBrowserLanguage = (): SupportedLanguage => {
   return 'en'
 }
 
-const PAGE_LINE_LIMIT = 42
+const PDF_PAGE_WIDTH = 595
+const PDF_PAGE_HEIGHT = 842
+const PDF_HORIZONTAL_MARGIN = 28
+const PDF_TOP_MARGIN = 34
+const PDF_BOTTOM_MARGIN = 32
+const PDF_MAX_FONT_SIZE = 10
+const PDF_MIN_FONT_SIZE = 5
+const PDF_CHARACTER_WIDTH_RATIO = 0.6
 
 const toPdfSafeText = (value: string) =>
   value
@@ -459,9 +466,17 @@ const createPdfTableLine = (
   ].join(' | ')
 
 function createPdfDocumentFromLines(lines: string[]) {
+  const longestLineLength = lines.reduce((longest, line) => Math.max(longest, line.length), 0)
+  const availableWidth = PDF_PAGE_WIDTH - PDF_HORIZONTAL_MARGIN * 2
+  const computedFontSize =
+    longestLineLength > 0 ? availableWidth / (longestLineLength * PDF_CHARACTER_WIDTH_RATIO) : PDF_MAX_FONT_SIZE
+  const fontSize = Math.max(PDF_MIN_FONT_SIZE, Math.min(PDF_MAX_FONT_SIZE, Number(computedFontSize.toFixed(2))))
+  const lineHeight = Number(Math.max(fontSize * 1.35, fontSize + 2).toFixed(2))
+  const pageLineLimit = Math.max(1, Math.floor((PDF_PAGE_HEIGHT - PDF_TOP_MARGIN - PDF_BOTTOM_MARGIN) / lineHeight))
+  const textStartY = PDF_PAGE_HEIGHT - PDF_TOP_MARGIN
   const pages: string[][] = []
-  for (let index = 0; index < lines.length; index += PAGE_LINE_LIMIT) {
-    pages.push(lines.slice(index, index + PAGE_LINE_LIMIT))
+  for (let index = 0; index < lines.length; index += pageLineLimit) {
+    pages.push(lines.slice(index, index + pageLineLimit))
   }
 
   const objects: Record<number, string> = {}
@@ -478,14 +493,14 @@ function createPdfDocumentFromLines(lines: string[]) {
 
     const textOperations = pageLines.map((line) => `(${toPdfSafeText(line)}) Tj T*`).join('\n')
     const stream = `BT
-/F1 10 Tf
-40 560 Td
-14 TL
+/F1 ${fontSize} Tf
+${PDF_HORIZONTAL_MARGIN} ${textStartY} Td
+${lineHeight} TL
 ${textOperations}
 ET`
 
     objects[pageObjectId] =
-      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Resources << /Font << /F1 ${fontObjectId} 0 R >> >> /Contents ${contentObjectId} 0 R >>`
+      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PDF_PAGE_WIDTH} ${PDF_PAGE_HEIGHT}] /Resources << /Font << /F1 ${fontObjectId} 0 R >> >> /Contents ${contentObjectId} 0 R >>`
     objects[contentObjectId] = `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`
   })
 
@@ -641,6 +656,17 @@ function App() {
       return
     }
 
+    const tableHeaderLine = createPdfTableLine(
+      copy.pdfMonthHeader,
+      copy.pdfPaymentHeader,
+      copy.pdfPrincipalHeader,
+      copy.pdfInterestHeader,
+      copy.pdfBankCostHeader,
+      copy.pdfAdditionalPaymentHeader,
+      copy.pdfRemainingCapitalHeader,
+    )
+    const tableSeparatorLine = '-'.repeat(tableHeaderLine.length)
+
     const lines = [
       copy.pdfTitle,
       copy.pdfGeneratedBy,
@@ -665,16 +691,8 @@ function App() {
       `${copy.pdfTotalCapitalAndInterest}: ${formatCurrencyForPdf(pdfCurrencyFormatter, plan.totalCapitalAndInterest)}`,
       `${copy.pdfTotalPaid}: ${formatCurrencyForPdf(pdfCurrencyFormatter, plan.totalPaid)}`,
       '',
-      createPdfTableLine(
-        copy.pdfMonthHeader,
-        copy.pdfPaymentHeader,
-        copy.pdfPrincipalHeader,
-        copy.pdfInterestHeader,
-        copy.pdfBankCostHeader,
-        copy.pdfAdditionalPaymentHeader,
-        copy.pdfRemainingCapitalHeader,
-      ),
-      '-'.repeat(92),
+      tableHeaderLine,
+      tableSeparatorLine,
       ...plan.installments.map(
         (installment) =>
           createPdfTableLine(
@@ -687,7 +705,7 @@ function App() {
             formatCurrencyForPdf(pdfCurrencyFormatter, installment.remainingPrincipal),
           ),
       ),
-      '-'.repeat(92),
+      tableSeparatorLine,
       createPdfTableLine(
         copy.pdfTotalRow,
         formatCurrencyForPdf(pdfCurrencyFormatter, plan.totalPaid),
