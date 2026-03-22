@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { calculateMortgagePlan, type AdditionalPaymentStrategy } from './lib/mortgage'
 
@@ -738,7 +738,7 @@ function App() {
               label={copy.houseCost}
               value={houseCost}
               min={0}
-              step={10000}
+              step={5000}
               onValueChange={setHouseCost}
               useGrouping
             />
@@ -1099,6 +1099,9 @@ type InputFieldProps = {
   onValueChange: (value: number) => void
 }
 
+const LONG_PRESS_INITIAL_DELAY_MS = 400
+const LONG_PRESS_REPEAT_INTERVAL_MS = 80
+
 const parseEuropeanNumber = (rawValue: string): number => {
   const normalized = rawValue
     .replace(/\./g, '')
@@ -1147,12 +1150,26 @@ function InputField({
   const resolvedFractionDigits = fractionDigits ?? countFractionDigits(step ?? 1)
   const [draftValue, setDraftValue] = useState(formatEuropeanNumber(value, resolvedFractionDigits, useGrouping))
   const [isFocused, setIsFocused] = useState(false)
+  const holdStartTimeoutRef = useRef<number | null>(null)
+  const holdIntervalRef = useRef<number | null>(null)
 
   useEffect(() => {
     if (!isFocused) {
       setDraftValue(formatEuropeanNumber(value, resolvedFractionDigits, useGrouping))
     }
   }, [isFocused, resolvedFractionDigits, useGrouping, value])
+
+  useEffect(() => {
+    return () => {
+      if (holdStartTimeoutRef.current !== null) {
+        window.clearTimeout(holdStartTimeoutRef.current)
+      }
+
+      if (holdIntervalRef.current !== null) {
+        window.clearInterval(holdIntervalRef.current)
+      }
+    }
+  }, [])
 
   const commitValue = (rawValue: string) => {
     if (rawValue === '') {
@@ -1182,6 +1199,28 @@ function InputField({
     setDraftValue(formatEuropeanNumber(clampedValue, resolvedFractionDigits, useGrouping))
   }
 
+  const stopContinuousStepChange = () => {
+    if (holdStartTimeoutRef.current !== null) {
+      window.clearTimeout(holdStartTimeoutRef.current)
+      holdStartTimeoutRef.current = null
+    }
+
+    if (holdIntervalRef.current !== null) {
+      window.clearInterval(holdIntervalRef.current)
+      holdIntervalRef.current = null
+    }
+  }
+
+  const startContinuousStepChange = (direction: 'increase' | 'decrease') => {
+    stopContinuousStepChange()
+    holdStartTimeoutRef.current = window.setTimeout(() => {
+      handleStepChange(direction)
+      holdIntervalRef.current = window.setInterval(() => {
+        handleStepChange(direction)
+      }, LONG_PRESS_REPEAT_INTERVAL_MS)
+    }, LONG_PRESS_INITIAL_DELAY_MS)
+  }
+
   return (
     <label className="block" htmlFor={id}>
       <span className="text-sm font-medium text-slate-200">{label}</span>
@@ -1189,6 +1228,16 @@ function InputField({
         <button
           type="button"
           onClick={() => handleStepChange('decrease')}
+          onPointerDown={(event) => {
+            if (event.button !== 0) {
+              return
+            }
+
+            startContinuousStepChange('decrease')
+          }}
+          onPointerUp={stopContinuousStepChange}
+          onPointerCancel={stopContinuousStepChange}
+          onPointerLeave={stopContinuousStepChange}
           className="rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-lg font-semibold text-slate-100 transition hover:border-emerald-400 hover:text-emerald-300"
           aria-label={`Decrease ${label}`}
         >
@@ -1233,6 +1282,16 @@ function InputField({
         <button
           type="button"
           onClick={() => handleStepChange('increase')}
+          onPointerDown={(event) => {
+            if (event.button !== 0) {
+              return
+            }
+
+            startContinuousStepChange('increase')
+          }}
+          onPointerUp={stopContinuousStepChange}
+          onPointerCancel={stopContinuousStepChange}
+          onPointerLeave={stopContinuousStepChange}
           className="rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-lg font-semibold text-slate-100 transition hover:border-emerald-400 hover:text-emerald-300"
           aria-label={`Increase ${label}`}
         >
