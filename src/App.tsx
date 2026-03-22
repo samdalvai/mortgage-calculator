@@ -1153,10 +1153,29 @@ function InputField({
   const holdStartTimeoutRef = useRef<number | null>(null)
   const holdIntervalRef = useRef<number | null>(null)
   const longPressTriggeredRef = useRef(false)
+  const activePointerIdRef = useRef<number | null>(null)
+  const valueRef = useRef(value)
+  const draftValueRef = useRef(draftValue)
+
+  const syncDraftValue = (nextDraftValue: string) => {
+    draftValueRef.current = nextDraftValue
+    setDraftValue(nextDraftValue)
+  }
+
+  const syncValue = (nextValue: number) => {
+    valueRef.current = nextValue
+    onValueChange(nextValue)
+  }
+
+  useEffect(() => {
+    valueRef.current = value
+  }, [value])
 
   useEffect(() => {
     if (!isFocused) {
-      setDraftValue(formatEuropeanNumber(value, resolvedFractionDigits, useGrouping))
+      const formattedValue = formatEuropeanNumber(value, resolvedFractionDigits, useGrouping)
+      draftValueRef.current = formattedValue
+      setDraftValue(formattedValue)
     }
   }, [isFocused, resolvedFractionDigits, useGrouping, value])
 
@@ -1174,7 +1193,7 @@ function InputField({
 
   const commitValue = (rawValue: string) => {
     if (rawValue === '') {
-      onValueChange(0)
+      syncValue(0)
       return
     }
 
@@ -1186,18 +1205,18 @@ function InputField({
 
     const roundedValue = roundToDigits(parsedValue, resolvedFractionDigits)
     const clampedValue = Math.max(min ?? Number.NEGATIVE_INFINITY, Math.min(max ?? Number.POSITIVE_INFINITY, roundedValue))
-    onValueChange(clampedValue)
+    syncValue(clampedValue)
   }
 
   const handleStepChange = (direction: 'increase' | 'decrease') => {
     const increment = step ?? 1
-    const parsedDraftValue = parseEuropeanNumber(draftValue)
-    const baseValue = Number.isNaN(parsedDraftValue) ? value : parsedDraftValue
+    const parsedDraftValue = parseEuropeanNumber(draftValueRef.current)
+    const baseValue = Number.isNaN(parsedDraftValue) ? valueRef.current : parsedDraftValue
     const nextValue = direction === 'increase' ? baseValue + increment : baseValue - increment
     const roundedValue = roundToDigits(nextValue, resolvedFractionDigits)
     const clampedValue = Math.max(min ?? Number.NEGATIVE_INFINITY, Math.min(max ?? Number.POSITIVE_INFINITY, roundedValue))
-    onValueChange(clampedValue)
-    setDraftValue(formatEuropeanNumber(clampedValue, resolvedFractionDigits, useGrouping))
+    syncValue(clampedValue)
+    syncDraftValue(formatEuropeanNumber(clampedValue, resolvedFractionDigits, useGrouping))
   }
 
   const stopContinuousStepChange = () => {
@@ -1243,12 +1262,33 @@ function InputField({
       return
     }
 
+    if (activePointerIdRef.current !== null) {
+      return
+    }
+
     event.preventDefault()
+    activePointerIdRef.current = event.pointerId
+    event.currentTarget.setPointerCapture(event.pointerId)
     handlePressStart(direction)
   }
 
-  const createPointerUpHandler = (direction: 'increase' | 'decrease') => () => {
+  const createPointerUpHandler = (direction: 'increase' | 'decrease') => (event: PointerEvent<HTMLButtonElement>) => {
+    if (activePointerIdRef.current !== event.pointerId) {
+      return
+    }
+
+    activePointerIdRef.current = null
     handlePressEnd(direction)
+  }
+
+  const handlePointerCancel = (event: PointerEvent<HTMLButtonElement>) => {
+    if (activePointerIdRef.current !== event.pointerId) {
+      return
+    }
+
+    activePointerIdRef.current = null
+    stopContinuousStepChange()
+    longPressTriggeredRef.current = false
   }
 
   return (
@@ -1259,8 +1299,7 @@ function InputField({
           type="button"
           onPointerDown={createPointerDownHandler('decrease')}
           onPointerUp={createPointerUpHandler('decrease')}
-          onPointerLeave={stopContinuousStepChange}
-          onPointerCancel={stopContinuousStepChange}
+          onPointerCancel={handlePointerCancel}
           className="touch-manipulation rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-lg font-semibold text-slate-100 transition hover:border-emerald-400 hover:text-emerald-300"
           aria-label={`Decrease ${label}`}
         >
@@ -1275,30 +1314,30 @@ function InputField({
           onFocus={() => {
             setIsFocused(true)
             if (parseEuropeanNumber(draftValue) === 0) {
-              setDraftValue('')
+              syncDraftValue('')
             }
           }}
           onBlur={() => {
             setIsFocused(false)
             if (draftValue === '') {
-              setDraftValue(formatEuropeanNumber(0, resolvedFractionDigits, useGrouping))
+              syncDraftValue(formatEuropeanNumber(0, resolvedFractionDigits, useGrouping))
               return
             }
 
             const parsedValue = parseEuropeanNumber(draftValue)
             if (Number.isNaN(parsedValue)) {
-              setDraftValue(formatEuropeanNumber(value, resolvedFractionDigits, useGrouping))
+              syncDraftValue(formatEuropeanNumber(value, resolvedFractionDigits, useGrouping))
               return
             }
 
             const roundedValue = roundToDigits(parsedValue, resolvedFractionDigits)
             const clampedValue = Math.max(min ?? Number.NEGATIVE_INFINITY, Math.min(max ?? Number.POSITIVE_INFINITY, roundedValue))
-            onValueChange(clampedValue)
-            setDraftValue(formatEuropeanNumber(clampedValue, resolvedFractionDigits, useGrouping))
+            syncValue(clampedValue)
+            syncDraftValue(formatEuropeanNumber(clampedValue, resolvedFractionDigits, useGrouping))
           }}
           onChange={(event) => {
             const rawInput = event.target.value
-            setDraftValue(rawInput)
+            syncDraftValue(rawInput)
             commitValue(rawInput)
           }}
         />
@@ -1306,8 +1345,7 @@ function InputField({
           type="button"
           onPointerDown={createPointerDownHandler('increase')}
           onPointerUp={createPointerUpHandler('increase')}
-          onPointerLeave={stopContinuousStepChange}
-          onPointerCancel={stopContinuousStepChange}
+          onPointerCancel={handlePointerCancel}
           className="touch-manipulation rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-lg font-semibold text-slate-100 transition hover:border-emerald-400 hover:text-emerald-300"
           aria-label={`Increase ${label}`}
         >
