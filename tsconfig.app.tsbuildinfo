@@ -1,1 +1,1 @@
-{"root":["./src/app.tsx","./src/main.tsx","./src/lib/mortgage.ts"],"version":"5.9.3"}
+{"root":["./src/app.tsx","./src/main.tsx","./src/components/displayvalue.tsx","./src/components/inputfield.tsx","./src/components/interactivechart.tsx","./src/i18n/translations.ts","./src/lib/formatting.ts","./src/lib/mortgage.ts","./src/lib/pdf.ts"],"version":"5.9.3"}
