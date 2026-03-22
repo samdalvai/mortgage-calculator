@@ -1100,7 +1100,7 @@ type InputFieldProps = {
 }
 
 const LONG_PRESS_INITIAL_DELAY_MS = 400
-const LONG_PRESS_REPEAT_INTERVAL_MS = 80
+const LONG_PRESS_REPEAT_INTERVAL_MS = 120
 
 const parseEuropeanNumber = (rawValue: string): number => {
   const normalized = rawValue
