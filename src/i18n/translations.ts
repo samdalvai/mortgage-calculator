@@ -22,7 +22,7 @@ export type Translation = {
   archiveNamePlaceholder: string
   archiveSelectLabel: string
   selectArchivePlaceholder: string
-  restoreArchivedPlan: string
+  selectArchivedPlan: string
   deleteArchivedPlan: string
   noArchivedPlans: string
   archivedOn: (dateLabel: string) => string
@@ -117,7 +117,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     archiveNamePlaceholder: 'e.g. Family home scenario',
     archiveSelectLabel: 'Saved plans',
     selectArchivePlaceholder: 'Select an archived plan',
-    restoreArchivedPlan: 'Restore selected plan',
+    selectArchivedPlan: 'Select this plan',
     deleteArchivedPlan: 'Delete selected plan',
     noArchivedPlans: 'No archived plans yet. Save one to quickly compare scenarios later.',
     archivedOn: (dateLabel: string) => `Archived on ${dateLabel}`,
@@ -211,7 +211,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     archiveNamePlaceholder: 'es. Scenario casa famiglia',
     archiveSelectLabel: 'Piani salvati',
     selectArchivePlaceholder: 'Seleziona un piano archiviato',
-    restoreArchivedPlan: 'Ripristina piano selezionato',
+    selectArchivedPlan: 'Seleziona questo piano',
     deleteArchivedPlan: 'Elimina piano selezionato',
     noArchivedPlans: 'Nessun piano archiviato. Salva un piano per confrontare rapidamente gli scenari.',
     archivedOn: (dateLabel: string) => `Archiviato il ${dateLabel}`,
@@ -307,7 +307,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     archiveNamePlaceholder: 'ex. Scénario maison familiale',
     archiveSelectLabel: 'Plans sauvegardés',
     selectArchivePlaceholder: 'Sélectionnez un plan archivé',
-    restoreArchivedPlan: 'Restaurer le plan sélectionné',
+    selectArchivedPlan: 'Sélectionner ce plan',
     deleteArchivedPlan: 'Supprimer le plan sélectionné',
     noArchivedPlans: 'Aucun plan archivé pour le moment. Sauvegardez-en un pour comparer rapidement des scénarios.',
     archivedOn: (dateLabel: string) => `Archivé le ${dateLabel}`,
@@ -403,7 +403,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     archiveNamePlaceholder: 'z. B. Familienszenario',
     archiveSelectLabel: 'Gespeicherte Pläne',
     selectArchivePlaceholder: 'Archivierten Plan auswählen',
-    restoreArchivedPlan: 'Ausgewählten Plan wiederherstellen',
+    selectArchivedPlan: 'Diesen Plan auswählen',
     deleteArchivedPlan: 'Ausgewählten Plan löschen',
     noArchivedPlans: 'Noch keine archivierten Pläne. Speichern Sie einen Plan, um Szenarien schnell zu vergleichen.',
     archivedOn: (dateLabel: string) => `Archiviert am ${dateLabel}`,
