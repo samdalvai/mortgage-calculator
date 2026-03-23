@@ -225,7 +225,7 @@ export function InputField({
           id={id}
           type="text"
           inputMode="decimal"
-          className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 outline-none ring-emerald-400 focus:ring"
+          className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-center text-slate-100 outline-none ring-emerald-400 focus:ring"
           value={draftValue}
           onFocus={() => {
             setIsFocused(true)
