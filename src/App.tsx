@@ -8,16 +8,80 @@ import { EURO_NUMBER_LOCALE, formatDurationLabel } from './lib/formatting'
 import { calculateMortgagePlan, type AdditionalPaymentStrategy } from './lib/mortgage'
 import { downloadMortgagePlanPdf } from './lib/pdf'
 
+const STORAGE_KEY = 'mortgage-calculator:inputs'
+
+type PersistedInputs = {
+  language: SupportedLanguage
+  houseCost: number
+  downPayment: number
+  years: number
+  annualInterestRate: number
+  monthlyBankCost: number
+  additionalAnnualPayment: number
+  additionalPaymentStrategy: AdditionalPaymentStrategy
+}
+
+const DEFAULT_INPUTS: PersistedInputs = {
+  language: getBrowserLanguage(),
+  houseCost: 250000,
+  downPayment: 50000,
+  years: 25,
+  annualInterestRate: 3,
+  monthlyBankCost: 0,
+  additionalAnnualPayment: 0,
+  additionalPaymentStrategy: 'shorten-duration',
+}
+
+const readPersistedInputs = (): PersistedInputs => {
+  if (typeof window === 'undefined') {
+    return DEFAULT_INPUTS
+  }
+
+  const rawInputs = window.localStorage.getItem(STORAGE_KEY)
+
+  if (!rawInputs) {
+    return DEFAULT_INPUTS
+  }
+
+  try {
+    const parsed = JSON.parse(rawInputs) as Partial<PersistedInputs>
+
+    return {
+      language:
+        parsed.language && ['en', 'it', 'fr', 'de'].includes(parsed.language)
+          ? parsed.language
+          : DEFAULT_INPUTS.language,
+      houseCost: typeof parsed.houseCost === 'number' ? parsed.houseCost : DEFAULT_INPUTS.houseCost,
+      downPayment: typeof parsed.downPayment === 'number' ? parsed.downPayment : DEFAULT_INPUTS.downPayment,
+      years: typeof parsed.years === 'number' ? parsed.years : DEFAULT_INPUTS.years,
+      annualInterestRate:
+        typeof parsed.annualInterestRate === 'number' ? parsed.annualInterestRate : DEFAULT_INPUTS.annualInterestRate,
+      monthlyBankCost: typeof parsed.monthlyBankCost === 'number' ? parsed.monthlyBankCost : DEFAULT_INPUTS.monthlyBankCost,
+      additionalAnnualPayment:
+        typeof parsed.additionalAnnualPayment === 'number'
+          ? parsed.additionalAnnualPayment
+          : DEFAULT_INPUTS.additionalAnnualPayment,
+      additionalPaymentStrategy:
+        parsed.additionalPaymentStrategy === 'reduce-payment' || parsed.additionalPaymentStrategy === 'shorten-duration'
+          ? parsed.additionalPaymentStrategy
+          : DEFAULT_INPUTS.additionalPaymentStrategy,
+    }
+  } catch {
+    return DEFAULT_INPUTS
+  }
+}
+
 function App() {
-  const [language, setLanguage] = useState<SupportedLanguage>(getBrowserLanguage)
-  const [houseCost, setHouseCost] = useState(250000)
-  const [downPayment, setDownPayment] = useState(50000)
-  const [years, setYears] = useState(25)
-  const [annualInterestRate, setAnnualInterestRate] = useState(3)
-  const [monthlyBankCost, setMonthlyBankCost] = useState(0)
-  const [additionalAnnualPayment, setAdditionalAnnualPayment] = useState(0)
+  const storedInputs = useMemo(() => readPersistedInputs(), [])
+  const [language, setLanguage] = useState<SupportedLanguage>(storedInputs.language)
+  const [houseCost, setHouseCost] = useState(storedInputs.houseCost)
+  const [downPayment, setDownPayment] = useState(storedInputs.downPayment)
+  const [years, setYears] = useState(storedInputs.years)
+  const [annualInterestRate, setAnnualInterestRate] = useState(storedInputs.annualInterestRate)
+  const [monthlyBankCost, setMonthlyBankCost] = useState(storedInputs.monthlyBankCost)
+  const [additionalAnnualPayment, setAdditionalAnnualPayment] = useState(storedInputs.additionalAnnualPayment)
   const [additionalPaymentStrategy, setAdditionalPaymentStrategy] =
-    useState<AdditionalPaymentStrategy>('shorten-duration')
+    useState<AdditionalPaymentStrategy>(storedInputs.additionalPaymentStrategy)
   const [showPlan, setShowPlan] = useState(false)
   const [selectedChartYear, setSelectedChartYear] = useState(0)
 
@@ -111,6 +175,35 @@ function App() {
       setSelectedChartYear(chartData.length - 1)
     }
   }, [chartData.length, selectedChartYear])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    window.localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        language,
+        houseCost,
+        downPayment,
+        years,
+        annualInterestRate,
+        monthlyBankCost,
+        additionalAnnualPayment,
+        additionalPaymentStrategy,
+      } satisfies PersistedInputs),
+    )
+  }, [
+    additionalAnnualPayment,
+    additionalPaymentStrategy,
+    annualInterestRate,
+    downPayment,
+    houseCost,
+    language,
+    monthlyBankCost,
+    years,
+  ])
 
   const maxChartAmount = useMemo(
     () =>
