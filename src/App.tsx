@@ -29,11 +29,13 @@ type PersistedInputs = {
   additionalPaymentStrategy: AdditionalPaymentStrategy
 }
 
+type ArchivedPlanInputs = Omit<PersistedInputs, 'language'>
+
 type ArchivedPlan = {
   id: string
   name: string
   createdAt: string
-  inputs: PersistedInputs
+  inputs: ArchivedPlanInputs
 }
 
 const DEFAULT_INPUTS: PersistedInputs = {
@@ -121,7 +123,29 @@ const readArchivedPlans = (): ArchivedPlan[] => {
           id: candidate.id,
           name: candidate.name,
           createdAt: candidate.createdAt,
-          inputs: toPersistedInputs(candidate.inputs),
+          inputs: {
+            houseCost: typeof candidate.inputs.houseCost === 'number' ? candidate.inputs.houseCost : DEFAULT_INPUTS.houseCost,
+            downPayment:
+              typeof candidate.inputs.downPayment === 'number' ? candidate.inputs.downPayment : DEFAULT_INPUTS.downPayment,
+            years: typeof candidate.inputs.years === 'number' ? candidate.inputs.years : DEFAULT_INPUTS.years,
+            annualInterestRate:
+              typeof candidate.inputs.annualInterestRate === 'number'
+                ? candidate.inputs.annualInterestRate
+                : DEFAULT_INPUTS.annualInterestRate,
+            monthlyBankCost:
+              typeof candidate.inputs.monthlyBankCost === 'number'
+                ? candidate.inputs.monthlyBankCost
+                : DEFAULT_INPUTS.monthlyBankCost,
+            additionalAnnualPayment:
+              typeof candidate.inputs.additionalAnnualPayment === 'number'
+                ? candidate.inputs.additionalAnnualPayment
+                : DEFAULT_INPUTS.additionalAnnualPayment,
+            additionalPaymentStrategy:
+              candidate.inputs.additionalPaymentStrategy === 'reduce-payment' ||
+              candidate.inputs.additionalPaymentStrategy === 'shorten-duration'
+                ? candidate.inputs.additionalPaymentStrategy
+                : DEFAULT_INPUTS.additionalPaymentStrategy,
+          },
         }
       })
       .filter((plan): plan is ArchivedPlan => plan !== null)
@@ -145,6 +169,7 @@ function App() {
   const [showPlan, setShowPlan] = useState(false)
   const [selectedChartYear, setSelectedChartYear] = useState(0)
   const [archivedPlans, setArchivedPlans] = useState<ArchivedPlan[]>(() => readArchivedPlans())
+  const [archivedPlanDraftNames, setArchivedPlanDraftNames] = useState<Record<string, string>>({})
   const [archiveName, setArchiveName] = useState('')
   const [archiveFeedback, setArchiveFeedback] = useState<string | null>(null)
 
@@ -284,6 +309,18 @@ function App() {
     window.localStorage.setItem(ARCHIVE_STORAGE_KEY, JSON.stringify(archivedPlans))
   }, [archivedPlans])
 
+  useEffect(() => {
+    setArchivedPlanDraftNames((currentDraftNames) => {
+      const nextDraftNames: Record<string, string> = {}
+
+      archivedPlans.forEach((planItem) => {
+        nextDraftNames[planItem.id] = currentDraftNames[planItem.id] ?? planItem.name
+      })
+
+      return nextDraftNames
+    })
+  }, [archivedPlans])
+
   const maxChartAmount = useMemo(
     () =>
       Math.max(
@@ -334,8 +371,7 @@ function App() {
     })
   }
 
-  const applyInputs = (inputs: PersistedInputs) => {
-    setLanguage(inputs.language)
+  const applyInputs = (inputs: ArchivedPlanInputs) => {
     setHouseCost(inputs.houseCost)
     setDownPayment(inputs.downPayment)
     setYears(inputs.years)
@@ -358,7 +394,6 @@ function App() {
       name: resolvedName,
       createdAt: new Date().toISOString(),
       inputs: {
-        language,
         houseCost,
         downPayment,
         years,
@@ -383,6 +418,49 @@ function App() {
   const handleDeleteArchivedPlan = (archivedPlan: ArchivedPlan) => {
     setArchivedPlans((currentPlans) => currentPlans.filter((planItem) => planItem.id !== archivedPlan.id))
     setArchiveFeedback(copy.archiveDeletedMessage(archivedPlan.name))
+  }
+
+  const handleRenameArchivedPlan = (archivedPlan: ArchivedPlan) => {
+    const candidateName = archivedPlanDraftNames[archivedPlan.id]?.trim()
+    const resolvedName = candidateName || copy.archiveDefaultName(new Date(archivedPlan.createdAt))
+
+    setArchivedPlans((currentPlans) =>
+      currentPlans.map((planItem) =>
+        planItem.id === archivedPlan.id
+          ? {
+              ...planItem,
+              name: resolvedName,
+            }
+          : planItem,
+      ),
+    )
+    setArchiveFeedback(copy.archiveRenamedMessage(resolvedName))
+  }
+
+  const handleSaveCurrentChangesToArchivedPlan = (archivedPlan: ArchivedPlan) => {
+    const candidateName = archivedPlanDraftNames[archivedPlan.id]?.trim()
+    const resolvedName = candidateName || archivedPlan.name
+
+    setArchivedPlans((currentPlans) =>
+      currentPlans.map((planItem) =>
+        planItem.id === archivedPlan.id
+          ? {
+              ...planItem,
+              name: resolvedName,
+              inputs: {
+                houseCost,
+                downPayment,
+                years,
+                annualInterestRate,
+                monthlyBankCost,
+                additionalAnnualPayment,
+                additionalPaymentStrategy,
+              },
+            }
+          : planItem,
+      ),
+    )
+    setArchiveFeedback(copy.archiveUpdatedMessage(resolvedName))
   }
 
   return (
@@ -599,13 +677,39 @@ function App() {
                         key={planItem.id}
                         className="flex flex-col gap-2 rounded-md border border-slate-700 bg-slate-900/60 p-3 sm:flex-row sm:items-center sm:justify-between"
                       >
-                        <div>
-                          <p className="text-sm font-medium text-slate-100">{planItem.name}</p>
+                        <div className="space-y-2">
+                          <input
+                            type="text"
+                            value={archivedPlanDraftNames[planItem.id] ?? planItem.name}
+                            onChange={(event) =>
+                              setArchivedPlanDraftNames((currentDraftNames) => ({
+                                ...currentDraftNames,
+                                [planItem.id]: event.target.value,
+                              }))
+                            }
+                            placeholder={copy.archiveNamePlaceholder}
+                            className="w-full rounded-md border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-sm text-slate-100 outline-none ring-cyan-400 focus:ring"
+                          />
                           <p className="text-xs text-slate-400">
                             {copy.archivedOn(archiveDateFormatter.format(new Date(planItem.createdAt)))}
                           </p>
                         </div>
                         <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleRenameArchivedPlan(planItem)}
+                            className="rounded-md border border-cyan-500 px-3 py-1.5 text-xs font-semibold text-cyan-200 transition hover:bg-cyan-500/10"
+                          >
+                            {copy.renameArchivedPlan}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleSaveCurrentChangesToArchivedPlan(planItem)}
+                            disabled={Boolean(validationError)}
+                            className="rounded-md border border-cyan-500 px-3 py-1.5 text-xs font-semibold text-cyan-200 transition hover:bg-cyan-500/10 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {copy.saveArchivedPlanChanges}
+                          </button>
                           <button
                             type="button"
                             onClick={() => handleRestoreArchivedPlan(planItem)}
