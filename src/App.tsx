@@ -420,23 +420,6 @@ function App() {
     setArchiveFeedback(copy.archiveDeletedMessage(archivedPlan.name))
   }
 
-  const handleRenameArchivedPlan = (archivedPlan: ArchivedPlan) => {
-    const candidateName = archivedPlanDraftNames[archivedPlan.id]?.trim()
-    const resolvedName = candidateName || copy.archiveDefaultName(new Date(archivedPlan.createdAt))
-
-    setArchivedPlans((currentPlans) =>
-      currentPlans.map((planItem) =>
-        planItem.id === archivedPlan.id
-          ? {
-              ...planItem,
-              name: resolvedName,
-            }
-          : planItem,
-      ),
-    )
-    setArchiveFeedback(copy.archiveRenamedMessage(resolvedName))
-  }
-
   const handleSaveCurrentChangesToArchivedPlan = (archivedPlan: ArchivedPlan) => {
     const candidateName = archivedPlanDraftNames[archivedPlan.id]?.trim()
     const resolvedName = candidateName || archivedPlan.name
@@ -673,10 +656,7 @@ function App() {
                 {archivedPlans.length > 0 ? (
                   <ul className="space-y-2">
                     {archivedPlans.map((planItem) => (
-                      <li
-                        key={planItem.id}
-                        className="flex flex-col gap-2 rounded-md border border-slate-700 bg-slate-900/60 p-3 sm:flex-row sm:items-center sm:justify-between"
-                      >
+                      <li key={planItem.id} className="space-y-3 rounded-md border border-slate-700 bg-slate-900/60 p-3">
                         <div className="space-y-2">
                           <input
                             type="text"
@@ -694,33 +674,27 @@ function App() {
                             {copy.archivedOn(archiveDateFormatter.format(new Date(planItem.createdAt)))}
                           </p>
                         </div>
-                        <div className="flex flex-wrap gap-2">
-                          <button
-                            type="button"
-                            onClick={() => handleRenameArchivedPlan(planItem)}
-                            className="rounded-md border border-cyan-500 px-3 py-1.5 text-xs font-semibold text-cyan-200 transition hover:bg-cyan-500/10"
-                          >
-                            {copy.renameArchivedPlan}
-                          </button>
+                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                           <button
                             type="button"
                             onClick={() => handleSaveCurrentChangesToArchivedPlan(planItem)}
                             disabled={Boolean(validationError)}
-                            className="rounded-md border border-cyan-500 px-3 py-1.5 text-xs font-semibold text-cyan-200 transition hover:bg-cyan-500/10 disabled:cursor-not-allowed disabled:opacity-60"
+                            className="inline-flex w-full items-center justify-center gap-1.5 rounded-md border border-cyan-500 px-3 py-1.5 text-xs font-semibold text-cyan-200 transition hover:bg-cyan-500/10 disabled:cursor-not-allowed disabled:opacity-60"
                           >
+                            <span aria-hidden="true">💾</span>
                             {copy.saveArchivedPlanChanges}
                           </button>
                           <button
                             type="button"
                             onClick={() => handleRestoreArchivedPlan(planItem)}
-                            className="rounded-md border border-emerald-500 px-3 py-1.5 text-xs font-semibold text-emerald-200 transition hover:bg-emerald-500/10"
+                            className="w-full rounded-md border border-emerald-500 px-3 py-1.5 text-xs font-semibold text-emerald-200 transition hover:bg-emerald-500/10"
                           >
                             {copy.restoreArchivedPlan}
                           </button>
                           <button
                             type="button"
                             onClick={() => handleDeleteArchivedPlan(planItem)}
-                            className="rounded-md border border-rose-500 px-3 py-1.5 text-xs font-semibold text-rose-200 transition hover:bg-rose-500/10"
+                            className="w-full rounded-md border border-rose-500 px-3 py-1.5 text-xs font-semibold text-rose-200 transition hover:bg-rose-500/10 sm:col-span-2"
                           >
                             {copy.deleteArchivedPlan}
                           </button>
