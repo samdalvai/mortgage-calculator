@@ -9,6 +9,14 @@ import { calculateMortgagePlan, type AdditionalPaymentStrategy } from './lib/mor
 import { downloadMortgagePlanPdf } from './lib/pdf'
 
 const STORAGE_KEY = 'mortgage-calculator:inputs'
+const ARCHIVE_STORAGE_KEY = 'mortgage-calculator:archived-plans'
+const MAX_ARCHIVED_PLANS = 20
+const LANGUAGE_LOCALE: Record<SupportedLanguage, string> = {
+  en: 'en-US',
+  it: 'it-IT',
+  fr: 'fr-FR',
+  de: 'de-DE',
+}
 
 type PersistedInputs = {
   language: SupportedLanguage
@@ -21,6 +29,13 @@ type PersistedInputs = {
   additionalPaymentStrategy: AdditionalPaymentStrategy
 }
 
+type ArchivedPlan = {
+  id: string
+  name: string
+  createdAt: string
+  inputs: PersistedInputs
+}
+
 const DEFAULT_INPUTS: PersistedInputs = {
   language: getBrowserLanguage(),
   houseCost: 250000,
@@ -31,6 +46,25 @@ const DEFAULT_INPUTS: PersistedInputs = {
   additionalAnnualPayment: 0,
   additionalPaymentStrategy: 'shorten-duration',
 }
+
+const toPersistedInputs = (parsed: Partial<PersistedInputs>): PersistedInputs => ({
+  language:
+    parsed.language && ['en', 'it', 'fr', 'de'].includes(parsed.language) ? parsed.language : DEFAULT_INPUTS.language,
+  houseCost: typeof parsed.houseCost === 'number' ? parsed.houseCost : DEFAULT_INPUTS.houseCost,
+  downPayment: typeof parsed.downPayment === 'number' ? parsed.downPayment : DEFAULT_INPUTS.downPayment,
+  years: typeof parsed.years === 'number' ? parsed.years : DEFAULT_INPUTS.years,
+  annualInterestRate:
+    typeof parsed.annualInterestRate === 'number' ? parsed.annualInterestRate : DEFAULT_INPUTS.annualInterestRate,
+  monthlyBankCost: typeof parsed.monthlyBankCost === 'number' ? parsed.monthlyBankCost : DEFAULT_INPUTS.monthlyBankCost,
+  additionalAnnualPayment:
+    typeof parsed.additionalAnnualPayment === 'number'
+      ? parsed.additionalAnnualPayment
+      : DEFAULT_INPUTS.additionalAnnualPayment,
+  additionalPaymentStrategy:
+    parsed.additionalPaymentStrategy === 'reduce-payment' || parsed.additionalPaymentStrategy === 'shorten-duration'
+      ? parsed.additionalPaymentStrategy
+      : DEFAULT_INPUTS.additionalPaymentStrategy,
+})
 
 const readPersistedInputs = (): PersistedInputs => {
   if (typeof window === 'undefined') {
@@ -45,29 +79,55 @@ const readPersistedInputs = (): PersistedInputs => {
 
   try {
     const parsed = JSON.parse(rawInputs) as Partial<PersistedInputs>
-
-    return {
-      language:
-        parsed.language && ['en', 'it', 'fr', 'de'].includes(parsed.language)
-          ? parsed.language
-          : DEFAULT_INPUTS.language,
-      houseCost: typeof parsed.houseCost === 'number' ? parsed.houseCost : DEFAULT_INPUTS.houseCost,
-      downPayment: typeof parsed.downPayment === 'number' ? parsed.downPayment : DEFAULT_INPUTS.downPayment,
-      years: typeof parsed.years === 'number' ? parsed.years : DEFAULT_INPUTS.years,
-      annualInterestRate:
-        typeof parsed.annualInterestRate === 'number' ? parsed.annualInterestRate : DEFAULT_INPUTS.annualInterestRate,
-      monthlyBankCost: typeof parsed.monthlyBankCost === 'number' ? parsed.monthlyBankCost : DEFAULT_INPUTS.monthlyBankCost,
-      additionalAnnualPayment:
-        typeof parsed.additionalAnnualPayment === 'number'
-          ? parsed.additionalAnnualPayment
-          : DEFAULT_INPUTS.additionalAnnualPayment,
-      additionalPaymentStrategy:
-        parsed.additionalPaymentStrategy === 'reduce-payment' || parsed.additionalPaymentStrategy === 'shorten-duration'
-          ? parsed.additionalPaymentStrategy
-          : DEFAULT_INPUTS.additionalPaymentStrategy,
-    }
+    return toPersistedInputs(parsed)
   } catch {
     return DEFAULT_INPUTS
+  }
+}
+
+const readArchivedPlans = (): ArchivedPlan[] => {
+  if (typeof window === 'undefined') {
+    return []
+  }
+
+  const rawPlans = window.localStorage.getItem(ARCHIVE_STORAGE_KEY)
+  if (!rawPlans) {
+    return []
+  }
+
+  try {
+    const parsed = JSON.parse(rawPlans)
+    if (!Array.isArray(parsed)) {
+      return []
+    }
+
+    return parsed
+      .map((item): ArchivedPlan | null => {
+        if (!item || typeof item !== 'object') {
+          return null
+        }
+
+        const candidate = item as Partial<ArchivedPlan> & { inputs?: Partial<PersistedInputs> }
+        if (
+          typeof candidate.id !== 'string' ||
+          typeof candidate.name !== 'string' ||
+          typeof candidate.createdAt !== 'string' ||
+          !candidate.inputs
+        ) {
+          return null
+        }
+
+        return {
+          id: candidate.id,
+          name: candidate.name,
+          createdAt: candidate.createdAt,
+          inputs: toPersistedInputs(candidate.inputs),
+        }
+      })
+      .filter((plan): plan is ArchivedPlan => plan !== null)
+      .slice(0, MAX_ARCHIVED_PLANS)
+  } catch {
+    return []
   }
 }
 
@@ -84,8 +144,19 @@ function App() {
     useState<AdditionalPaymentStrategy>(storedInputs.additionalPaymentStrategy)
   const [showPlan, setShowPlan] = useState(false)
   const [selectedChartYear, setSelectedChartYear] = useState(0)
+  const [archivedPlans, setArchivedPlans] = useState<ArchivedPlan[]>(() => readArchivedPlans())
+  const [archiveName, setArchiveName] = useState('')
+  const [archiveFeedback, setArchiveFeedback] = useState<string | null>(null)
 
   const copy = TRANSLATIONS[language]
+  const archiveDateFormatter = useMemo(
+    () =>
+      new Intl.DateTimeFormat(LANGUAGE_LOCALE[language], {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      }),
+    [language],
+  )
 
   const euroFormatter = useMemo(
     () =>
@@ -205,6 +276,14 @@ function App() {
     years,
   ])
 
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    window.localStorage.setItem(ARCHIVE_STORAGE_KEY, JSON.stringify(archivedPlans))
+  }, [archivedPlans])
+
   const maxChartAmount = useMemo(
     () =>
       Math.max(
@@ -253,6 +332,57 @@ function App() {
       totalBankCosts: plan.totalBankCosts,
       installments: plan.installments,
     })
+  }
+
+  const applyInputs = (inputs: PersistedInputs) => {
+    setLanguage(inputs.language)
+    setHouseCost(inputs.houseCost)
+    setDownPayment(inputs.downPayment)
+    setYears(inputs.years)
+    setAnnualInterestRate(inputs.annualInterestRate)
+    setMonthlyBankCost(inputs.monthlyBankCost)
+    setAdditionalAnnualPayment(inputs.additionalAnnualPayment)
+    setAdditionalPaymentStrategy(inputs.additionalPaymentStrategy)
+    setSelectedChartYear(0)
+  }
+
+  const handleArchiveCurrentPlan = () => {
+    if (validationError) {
+      return
+    }
+
+    const name = archiveName.trim()
+    const resolvedName = name || copy.archiveDefaultName(new Date())
+    const archivedItem: ArchivedPlan = {
+      id: crypto.randomUUID(),
+      name: resolvedName,
+      createdAt: new Date().toISOString(),
+      inputs: {
+        language,
+        houseCost,
+        downPayment,
+        years,
+        annualInterestRate,
+        monthlyBankCost,
+        additionalAnnualPayment,
+        additionalPaymentStrategy,
+      },
+    }
+
+    setArchivedPlans((currentPlans) => [archivedItem, ...currentPlans].slice(0, MAX_ARCHIVED_PLANS))
+    setArchiveName('')
+    setArchiveFeedback(copy.archiveSavedMessage(resolvedName))
+  }
+
+  const handleRestoreArchivedPlan = (archivedPlan: ArchivedPlan) => {
+    applyInputs(archivedPlan.inputs)
+    setArchiveFeedback(copy.archiveRestoredMessage(archivedPlan.name))
+    setShowPlan(true)
+  }
+
+  const handleDeleteArchivedPlan = (archivedPlan: ArchivedPlan) => {
+    setArchivedPlans((currentPlans) => currentPlans.filter((planItem) => planItem.id !== archivedPlan.id))
+    setArchiveFeedback(copy.archiveDeletedMessage(archivedPlan.name))
   }
 
   return (
@@ -431,12 +561,74 @@ function App() {
               </button>
               <button
                 type="button"
+                onClick={handleArchiveCurrentPlan}
+                disabled={Boolean(validationError)}
+                className="rounded-md border border-cyan-400 px-4 py-2 text-sm font-semibold text-cyan-300 transition hover:bg-cyan-500/10"
+              >
+                {copy.archivePlan}
+              </button>
+              <button
+                type="button"
                 onClick={handleExportPlanAsPdf}
                 disabled={Boolean(validationError)}
                 className="rounded-md border border-emerald-400 px-4 py-2 text-sm font-semibold text-emerald-300 transition hover:bg-emerald-500/10"
               >
                 {copy.exportPlanAsPdf}
               </button>
+            </div>
+
+            <div className="mt-5 rounded-lg border border-slate-700 bg-slate-950/60 p-4">
+              <h3 className="text-base font-semibold text-slate-100">{copy.archiveSectionTitle}</h3>
+              <div className="mt-3 grid gap-3">
+                <label className="block" htmlFor="archiveName">
+                  <span className="text-sm font-medium text-slate-200">{copy.archiveNameLabel}</span>
+                  <input
+                    id="archiveName"
+                    type="text"
+                    value={archiveName}
+                    onChange={(event) => setArchiveName(event.target.value)}
+                    placeholder={copy.archiveNamePlaceholder}
+                    className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 outline-none ring-cyan-400 focus:ring"
+                  />
+                </label>
+
+                {archivedPlans.length > 0 ? (
+                  <ul className="space-y-2">
+                    {archivedPlans.map((planItem) => (
+                      <li
+                        key={planItem.id}
+                        className="flex flex-col gap-2 rounded-md border border-slate-700 bg-slate-900/60 p-3 sm:flex-row sm:items-center sm:justify-between"
+                      >
+                        <div>
+                          <p className="text-sm font-medium text-slate-100">{planItem.name}</p>
+                          <p className="text-xs text-slate-400">
+                            {copy.archivedOn(archiveDateFormatter.format(new Date(planItem.createdAt)))}
+                          </p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleRestoreArchivedPlan(planItem)}
+                            className="rounded-md border border-emerald-500 px-3 py-1.5 text-xs font-semibold text-emerald-200 transition hover:bg-emerald-500/10"
+                          >
+                            {copy.restoreArchivedPlan}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteArchivedPlan(planItem)}
+                            className="rounded-md border border-rose-500 px-3 py-1.5 text-xs font-semibold text-rose-200 transition hover:bg-rose-500/10"
+                          >
+                            {copy.deleteArchivedPlan}
+                          </button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-slate-400">{copy.noArchivedPlans}</p>
+                )}
+                {archiveFeedback ? <p className="text-sm text-cyan-300">{archiveFeedback}</p> : null}
+              </div>
             </div>
 
             {showPlan && !validationError ? (

@@ -16,6 +16,20 @@ export type Translation = {
   showPlan: string
   hidePlan: string
   exportPlanAsPdf: string
+  archivePlan: string
+  archiveSectionTitle: string
+  archiveNameLabel: string
+  archiveNamePlaceholder: string
+  archiveSelectLabel: string
+  selectArchivePlaceholder: string
+  restoreArchivedPlan: string
+  deleteArchivedPlan: string
+  noArchivedPlans: string
+  archivedOn: (dateLabel: string) => string
+  archiveDefaultName: (date: Date) => string
+  archiveSavedMessage: (name: string) => string
+  archiveRestoredMessage: (name: string) => string
+  archiveDeletedMessage: (name: string) => string
   monthWithNumber: (month: number) => string
   payment: string
   principal: string
@@ -93,6 +107,21 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     showPlan: 'Show plan',
     hidePlan: 'Hide plan',
     exportPlanAsPdf: 'Export plan as PDF',
+    archivePlan: '🗂️ Archive current plan',
+    archiveSectionTitle: 'Archived plans',
+    archiveNameLabel: 'Archive name (optional)',
+    archiveNamePlaceholder: 'e.g. Family home scenario',
+    archiveSelectLabel: 'Saved plans',
+    selectArchivePlaceholder: 'Select an archived plan',
+    restoreArchivedPlan: 'Restore selected plan',
+    deleteArchivedPlan: 'Delete selected plan',
+    noArchivedPlans: 'No archived plans yet. Save one to quickly compare scenarios later.',
+    archivedOn: (dateLabel: string) => `Archived on ${dateLabel}`,
+    archiveDefaultName: (date: Date) =>
+      `Plan ${new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium', timeStyle: 'short' }).format(date)}`,
+    archiveSavedMessage: (name: string) => `Saved "${name}" to your archive.`,
+    archiveRestoredMessage: (name: string) => `Restored "${name}".`,
+    archiveDeletedMessage: (name: string) => `Deleted "${name}" from your archive.`,
     monthWithNumber: (month: number) => `Month ${month}`,
     payment: 'Payment',
     principal: 'Principal',
@@ -168,6 +197,21 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     showPlan: 'Mostra piano',
     hidePlan: 'Nascondi piano',
     exportPlanAsPdf: 'Esporta piano in PDF',
+    archivePlan: '🗂️ Archivia piano corrente',
+    archiveSectionTitle: 'Piani archiviati',
+    archiveNameLabel: 'Nome archivio (opzionale)',
+    archiveNamePlaceholder: 'es. Scenario casa famiglia',
+    archiveSelectLabel: 'Piani salvati',
+    selectArchivePlaceholder: 'Seleziona un piano archiviato',
+    restoreArchivedPlan: 'Ripristina piano selezionato',
+    deleteArchivedPlan: 'Elimina piano selezionato',
+    noArchivedPlans: 'Nessun piano archiviato. Salva un piano per confrontare rapidamente gli scenari.',
+    archivedOn: (dateLabel: string) => `Archiviato il ${dateLabel}`,
+    archiveDefaultName: (date: Date) =>
+      `Piano ${new Intl.DateTimeFormat('it-IT', { dateStyle: 'medium', timeStyle: 'short' }).format(date)}`,
+    archiveSavedMessage: (name: string) => `"${name}" salvato nell'archivio.`,
+    archiveRestoredMessage: (name: string) => `"${name}" ripristinato.`,
+    archiveDeletedMessage: (name: string) => `"${name}" eliminato dall'archivio.`,
     monthWithNumber: (month: number) => `Mese ${month}`,
     payment: 'Rata',
     principal: 'Capitale',
@@ -245,6 +289,21 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     showPlan: 'Afficher le plan',
     hidePlan: 'Masquer le plan',
     exportPlanAsPdf: 'Exporter le plan en PDF',
+    archivePlan: '🗂️ Archiver le plan actuel',
+    archiveSectionTitle: 'Plans archivés',
+    archiveNameLabel: "Nom de l'archive (optionnel)",
+    archiveNamePlaceholder: 'ex. Scénario maison familiale',
+    archiveSelectLabel: 'Plans sauvegardés',
+    selectArchivePlaceholder: 'Sélectionnez un plan archivé',
+    restoreArchivedPlan: 'Restaurer le plan sélectionné',
+    deleteArchivedPlan: 'Supprimer le plan sélectionné',
+    noArchivedPlans: 'Aucun plan archivé pour le moment. Sauvegardez-en un pour comparer rapidement des scénarios.',
+    archivedOn: (dateLabel: string) => `Archivé le ${dateLabel}`,
+    archiveDefaultName: (date: Date) =>
+      `Plan ${new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }).format(date)}`,
+    archiveSavedMessage: (name: string) => `"${name}" enregistré dans vos archives.`,
+    archiveRestoredMessage: (name: string) => `"${name}" restauré.`,
+    archiveDeletedMessage: (name: string) => `"${name}" supprimé des archives.`,
     monthWithNumber: (month: number) => `Mois ${month}`,
     payment: 'Paiement',
     principal: 'Capital',
@@ -322,6 +381,21 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     showPlan: 'Plan anzeigen',
     hidePlan: 'Plan ausblenden',
     exportPlanAsPdf: 'Plan als PDF exportieren',
+    archivePlan: '🗂️ Aktuellen Plan archivieren',
+    archiveSectionTitle: 'Archivierte Pläne',
+    archiveNameLabel: 'Archivname (optional)',
+    archiveNamePlaceholder: 'z. B. Familienszenario',
+    archiveSelectLabel: 'Gespeicherte Pläne',
+    selectArchivePlaceholder: 'Archivierten Plan auswählen',
+    restoreArchivedPlan: 'Ausgewählten Plan wiederherstellen',
+    deleteArchivedPlan: 'Ausgewählten Plan löschen',
+    noArchivedPlans: 'Noch keine archivierten Pläne. Speichern Sie einen Plan, um Szenarien schnell zu vergleichen.',
+    archivedOn: (dateLabel: string) => `Archiviert am ${dateLabel}`,
+    archiveDefaultName: (date: Date) =>
+      `Plan ${new Intl.DateTimeFormat('de-DE', { dateStyle: 'medium', timeStyle: 'short' }).format(date)}`,
+    archiveSavedMessage: (name: string) => `"${name}" wurde im Archiv gespeichert.`,
+    archiveRestoredMessage: (name: string) => `"${name}" wurde wiederhergestellt.`,
+    archiveDeletedMessage: (name: string) => `"${name}" wurde aus dem Archiv gelöscht.`,
     monthWithNumber: (month: number) => `Monat ${month}`,
     payment: 'Rate',
     principal: 'Kapital',
