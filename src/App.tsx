@@ -632,8 +632,9 @@ function App() {
                 type="button"
                 onClick={handleExportPlanAsPdf}
                 disabled={Boolean(validationError)}
-                className="rounded-md border border-emerald-400 px-4 py-2 text-sm font-semibold text-emerald-300 transition hover:bg-emerald-500/10"
+                className="inline-flex items-center gap-1.5 rounded-md border border-emerald-400 px-4 py-2 text-sm font-semibold text-emerald-300 transition hover:bg-emerald-500/10"
               >
+                <span aria-hidden="true">⬇️</span>
                 {copy.exportPlanAsPdf}
               </button>
             </div>
@@ -689,13 +690,14 @@ function App() {
                             onClick={() => handleRestoreArchivedPlan(planItem)}
                             className="w-full rounded-md border border-emerald-500 px-3 py-1.5 text-xs font-semibold text-emerald-200 transition hover:bg-emerald-500/10"
                           >
-                            {copy.restoreArchivedPlan}
+                            {copy.selectArchivedPlan}
                           </button>
                           <button
                             type="button"
                             onClick={() => handleDeleteArchivedPlan(planItem)}
-                            className="w-full rounded-md border border-rose-500 px-3 py-1.5 text-xs font-semibold text-rose-200 transition hover:bg-rose-500/10 sm:col-span-2"
+                            className="inline-flex w-full items-center justify-center gap-1.5 rounded-md border border-rose-500 px-3 py-1.5 text-xs font-semibold text-rose-200 transition hover:bg-rose-500/10 sm:col-span-2"
                           >
+                            <span aria-hidden="true">🗑️</span>
                             {copy.deleteArchivedPlan}
                           </button>
                         </div>
