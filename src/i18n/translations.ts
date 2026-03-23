@@ -30,6 +30,10 @@ export type Translation = {
   archiveSavedMessage: (name: string) => string
   archiveRestoredMessage: (name: string) => string
   archiveDeletedMessage: (name: string) => string
+  archiveRenamedMessage: (name: string) => string
+  archiveUpdatedMessage: (name: string) => string
+  renameArchivedPlan: string
+  saveArchivedPlanChanges: string
   monthWithNumber: (month: number) => string
   payment: string
   principal: string
@@ -122,6 +126,10 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     archiveSavedMessage: (name: string) => `Saved "${name}" to your archive.`,
     archiveRestoredMessage: (name: string) => `Restored "${name}".`,
     archiveDeletedMessage: (name: string) => `Deleted "${name}" from your archive.`,
+    archiveRenamedMessage: (name: string) => `Renamed archived plan to "${name}".`,
+    archiveUpdatedMessage: (name: string) => `Updated archived plan "${name}" with your current changes.`,
+    renameArchivedPlan: 'Rename archived plan',
+    saveArchivedPlanChanges: 'Save current changes',
     monthWithNumber: (month: number) => `Month ${month}`,
     payment: 'Payment',
     principal: 'Principal',
@@ -212,6 +220,10 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     archiveSavedMessage: (name: string) => `"${name}" salvato nell'archivio.`,
     archiveRestoredMessage: (name: string) => `"${name}" ripristinato.`,
     archiveDeletedMessage: (name: string) => `"${name}" eliminato dall'archivio.`,
+    archiveRenamedMessage: (name: string) => `Piano archiviato rinominato in "${name}".`,
+    archiveUpdatedMessage: (name: string) => `Il piano archiviato "${name}" è stato aggiornato con le modifiche correnti.`,
+    renameArchivedPlan: 'Rinomina piano archiviato',
+    saveArchivedPlanChanges: 'Salva modifiche correnti',
     monthWithNumber: (month: number) => `Mese ${month}`,
     payment: 'Rata',
     principal: 'Capitale',
@@ -304,6 +316,10 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     archiveSavedMessage: (name: string) => `"${name}" enregistré dans vos archives.`,
     archiveRestoredMessage: (name: string) => `"${name}" restauré.`,
     archiveDeletedMessage: (name: string) => `"${name}" supprimé des archives.`,
+    archiveRenamedMessage: (name: string) => `Plan archivé renommé en "${name}".`,
+    archiveUpdatedMessage: (name: string) => `Plan archivé "${name}" mis à jour avec vos modifications.`,
+    renameArchivedPlan: 'Renommer le plan archivé',
+    saveArchivedPlanChanges: 'Enregistrer les modifications',
     monthWithNumber: (month: number) => `Mois ${month}`,
     payment: 'Paiement',
     principal: 'Capital',
@@ -396,6 +412,10 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     archiveSavedMessage: (name: string) => `"${name}" wurde im Archiv gespeichert.`,
     archiveRestoredMessage: (name: string) => `"${name}" wurde wiederhergestellt.`,
     archiveDeletedMessage: (name: string) => `"${name}" wurde aus dem Archiv gelöscht.`,
+    archiveRenamedMessage: (name: string) => `Archivierter Plan wurde zu "${name}" umbenannt.`,
+    archiveUpdatedMessage: (name: string) => `Archivierter Plan "${name}" wurde mit deinen aktuellen Änderungen aktualisiert.`,
+    renameArchivedPlan: 'Archivierten Plan umbenennen',
+    saveArchivedPlanChanges: 'Aktuelle Änderungen speichern',
     monthWithNumber: (month: number) => `Monat ${month}`,
     payment: 'Rate',
     principal: 'Kapital',
