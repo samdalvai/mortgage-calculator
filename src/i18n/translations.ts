@@ -22,7 +22,7 @@ export type Translation = {
   archiveNamePlaceholder: string
   archiveSelectLabel: string
   selectArchivePlaceholder: string
-  restoreArchivedPlan: string
+  selectArchivedPlan: string
   deleteArchivedPlan: string
   noArchivedPlans: string
   archivedOn: (dateLabel: string) => string
@@ -117,7 +117,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     archiveNamePlaceholder: 'e.g. Family home scenario',
     archiveSelectLabel: 'Saved plans',
     selectArchivePlaceholder: 'Select an archived plan',
-    restoreArchivedPlan: 'Restore selected plan',
+    selectArchivedPlan: 'Select this plan',
     deleteArchivedPlan: 'Delete selected plan',
     noArchivedPlans: 'No archived plans yet. Save one to quickly compare scenarios later.',
     archivedOn: (dateLabel: string) => `Archived on ${dateLabel}`,
@@ -129,7 +129,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     archiveRenamedMessage: (name: string) => `Renamed archived plan to "${name}".`,
     archiveUpdatedMessage: (name: string) => `Updated archived plan "${name}" with your current changes.`,
     renameArchivedPlan: 'Rename archived plan',
-    saveArchivedPlanChanges: 'Save current changes',
+    saveArchivedPlanChanges: 'Save changes',
     monthWithNumber: (month: number) => `Month ${month}`,
     payment: 'Payment',
     principal: 'Principal',
@@ -211,7 +211,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     archiveNamePlaceholder: 'es. Scenario casa famiglia',
     archiveSelectLabel: 'Piani salvati',
     selectArchivePlaceholder: 'Seleziona un piano archiviato',
-    restoreArchivedPlan: 'Ripristina piano selezionato',
+    selectArchivedPlan: 'Seleziona questo piano',
     deleteArchivedPlan: 'Elimina piano selezionato',
     noArchivedPlans: 'Nessun piano archiviato. Salva un piano per confrontare rapidamente gli scenari.',
     archivedOn: (dateLabel: string) => `Archiviato il ${dateLabel}`,
@@ -223,7 +223,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     archiveRenamedMessage: (name: string) => `Piano archiviato rinominato in "${name}".`,
     archiveUpdatedMessage: (name: string) => `Il piano archiviato "${name}" è stato aggiornato con le modifiche correnti.`,
     renameArchivedPlan: 'Rinomina piano archiviato',
-    saveArchivedPlanChanges: 'Salva modifiche correnti',
+    saveArchivedPlanChanges: 'Salva modifiche',
     monthWithNumber: (month: number) => `Mese ${month}`,
     payment: 'Rata',
     principal: 'Capitale',
@@ -307,7 +307,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     archiveNamePlaceholder: 'ex. Scénario maison familiale',
     archiveSelectLabel: 'Plans sauvegardés',
     selectArchivePlaceholder: 'Sélectionnez un plan archivé',
-    restoreArchivedPlan: 'Restaurer le plan sélectionné',
+    selectArchivedPlan: 'Sélectionner ce plan',
     deleteArchivedPlan: 'Supprimer le plan sélectionné',
     noArchivedPlans: 'Aucun plan archivé pour le moment. Sauvegardez-en un pour comparer rapidement des scénarios.',
     archivedOn: (dateLabel: string) => `Archivé le ${dateLabel}`,
@@ -319,7 +319,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     archiveRenamedMessage: (name: string) => `Plan archivé renommé en "${name}".`,
     archiveUpdatedMessage: (name: string) => `Plan archivé "${name}" mis à jour avec vos modifications.`,
     renameArchivedPlan: 'Renommer le plan archivé',
-    saveArchivedPlanChanges: 'Enregistrer les modifications',
+    saveArchivedPlanChanges: 'Enregistrer les changements',
     monthWithNumber: (month: number) => `Mois ${month}`,
     payment: 'Paiement',
     principal: 'Capital',
@@ -403,7 +403,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     archiveNamePlaceholder: 'z. B. Familienszenario',
     archiveSelectLabel: 'Gespeicherte Pläne',
     selectArchivePlaceholder: 'Archivierten Plan auswählen',
-    restoreArchivedPlan: 'Ausgewählten Plan wiederherstellen',
+    selectArchivedPlan: 'Diesen Plan auswählen',
     deleteArchivedPlan: 'Ausgewählten Plan löschen',
     noArchivedPlans: 'Noch keine archivierten Pläne. Speichern Sie einen Plan, um Szenarien schnell zu vergleichen.',
     archivedOn: (dateLabel: string) => `Archiviert am ${dateLabel}`,
@@ -415,7 +415,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     archiveRenamedMessage: (name: string) => `Archivierter Plan wurde zu "${name}" umbenannt.`,
     archiveUpdatedMessage: (name: string) => `Archivierter Plan "${name}" wurde mit deinen aktuellen Änderungen aktualisiert.`,
     renameArchivedPlan: 'Archivierten Plan umbenennen',
-    saveArchivedPlanChanges: 'Aktuelle Änderungen speichern',
+    saveArchivedPlanChanges: 'Änderungen speichern',
     monthWithNumber: (month: number) => `Monat ${month}`,
     payment: 'Rate',
     principal: 'Kapital',
