@@ -1,53 +1,61 @@
-# Mortgage Calculator (React + TypeScript + Tailwind)
+# Mortgage Calculator
 
-This repository contains a baseline React web app scaffolded with TypeScript and Tailwind CSS, plus a GitHub Actions workflow to deploy to GitHub Pages.
+A browser-based mortgage calculator for building and comparing mortgage repayment plans.
 
-## Tech stack
+The app computes a French amortization schedule from the house cost, down payment, duration, annual interest rate, and monthly bank costs. It shows the monthly payment, total capital repaid, total interest, bank costs, overall amount paid, and a month-by-month repayment plan.
 
-- React 18
-- TypeScript
-- Vite
-- Tailwind CSS
+## What It Calculates
 
-## Local development
+- Loan principal from house cost minus down payment
+- Fixed French-amortization monthly payment
+- Monthly split between principal, interest, bank cost, and optional extra payment
+- Remaining capital after each installment
+- Total capital, interest, bank costs, extra payments, and total paid
+- Interest and duration saved when extra annual payments are enabled
 
-1. Install dependencies:
+## Features
 
-   ```bash
-   npm install
-   ```
+- Inputs for house cost, down payment, mortgage duration, annual interest rate, and monthly bank cost
+- Optional annual additional payments
+- Two additional-payment strategies:
+  - shorten the mortgage duration
+  - reduce the future monthly payment
+- Interactive chart for remaining capital, repaid capital, and paid interest over time
+- Full monthly repayment plan table
+- PDF export of the mortgage plan
+- Local archive for saving and restoring scenarios
+- Interface translations for English, Italian, French, and German
 
-2. Start the dev server:
+## Calculation Notes
 
-   ```bash
-   npm run dev
-   ```
+The main calculation lives in `src/lib/mortgage.ts`.
 
-3. Build for production:
+Monthly interest is calculated from the annual rate divided by 12. The base monthly payment uses the standard French amortization formula, then monthly bank costs are added separately. Extra annual payments are applied every 12th installment when configured.
 
-   ```bash
-   npm run build
-   ```
+When the extra-payment strategy is set to shorten duration, the regular monthly payment stays the same and the loan ends earlier. When the strategy is set to reduce monthly payment, the remaining principal is recast over the remaining months after each extra payment.
 
-4. Preview production build:
+## Local Development
 
-   ```bash
-   npm run preview
-   ```
+Install dependencies:
 
-## GitHub Pages deployment
+```bash
+npm install
+```
 
-A workflow file is included at `.github/workflows/deploy.yml`.
+Start the development server:
 
-### One-time setup on GitHub
+```bash
+npm run dev
+```
 
-1. Push this repository to GitHub.
-2. In **Settings → Pages**, set **Source** to **GitHub Actions**.
-3. Push to your default branch (or manually run the workflow from the Actions tab).
+Run the mortgage calculation tests:
 
-After deployment, your app will be available at:
+```bash
+npm test
+```
 
-- `https://<your-github-username>.github.io/mortgage-calculator/`
+Build for production:
 
-> If your repository name is different, replace `mortgage-calculator` with your actual repo name.
-
+```bash
+npm run build
+```
