@@ -10,7 +10,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 
 export default [
   {
-    ignores: ['dist/**', '.test-dist/**', 'node_modules/**', '*.d.ts', '*.js', '*.tsbuildinfo'],
+    ignores: ['dist/**', '.test-dist/**', 'node_modules/**', 'apps/mobile/**', '**/*.d.ts', '**/*.js', '**/*.tsbuildinfo'],
   },
   {
     files: ['**/*.{ts,tsx}'],
@@ -22,7 +22,7 @@ export default [
         ecmaFeatures: {
           jsx: true,
         },
-        project: ['./tsconfig.app.json', './tsconfig.tests.json', './tsconfig.node.json'],
+        project: ['./apps/web/tsconfig.app.json', './tsconfig.tests.json', './apps/web/tsconfig.node.json'],
         tsconfigRootDir: __dirname,
       },
       globals: {

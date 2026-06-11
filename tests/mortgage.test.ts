@@ -1,4 +1,4 @@
-import { calculateMortgagePlan } from '../src/lib/mortgage.js'
+import { calculateMortgagePlan } from '../packages/core/src/lib/mortgage.js'
 
 function assertEqual(actual: number, expected: number, message: string) {
   if (actual !== expected) {

@@ -1,0 +1,22 @@
+{
+  "expo": {
+    "name": "Mortgage Calculator",
+    "slug": "mortgage-calculator",
+    "version": "0.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#020617"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    }
+  }
+}

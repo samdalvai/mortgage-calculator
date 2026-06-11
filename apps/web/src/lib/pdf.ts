@@ -1,6 +1,6 @@
-import type { Translation } from '../i18n/translations'
+import type { Translation } from '../../../../packages/core/src'
 
-import { formatCurrencyForPdf } from './formatting'
+import { formatCurrencyForPdf } from '../../../../packages/core/src'
 
 const PDF_PAGE_WIDTH = 595
 const PDF_PAGE_HEIGHT = 842
