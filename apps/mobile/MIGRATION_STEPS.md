@@ -1,169 +1,162 @@
-# Mobile Migration Steps
+# Mobile Migration Status
 
-This report identifies the implementation steps needed to convert `apps/mobile` into a native version of the full app currently implemented in `apps/web`.
+This document tracks the migration of `apps/mobile` into a native version of the full mortgage calculator currently implemented in `apps/web`.
 
-## Current State
+## Implemented
 
-`apps/mobile/App.tsx` is currently a small native shell with five inputs, hardcoded English labels, no persistence, no archive, no chart, no PDF export, and no installment list.
+1. Shared core logic extraction.
 
-The full web app lives mostly in `apps/web/src/App.tsx`. The target should be feature parity with the web app's behavior, adapted to React Native primitives instead of copying DOM, Tailwind, browser storage, SVG, and PDF download code directly.
+   Added reusable app-state helpers in `packages/core/src/lib/app-state.ts`:
 
-## Implementation Steps
+   - default calculator inputs
+   - persisted input parsing
+   - archived plan parsing
+   - archive constants
+   - language locale mapping
+   - chart data generation
+   - validation error classification
 
-1. Define the mobile feature parity target.
+2. Shared PDF generation.
 
-   Match the web app's behavior, not its exact DOM implementation. The web app uses browser APIs such as HTML inputs, SVG, `localStorage`, `Blob`, `document`, and `URL`, so those pieces need native equivalents.
+   Added pure PDF document generation in `packages/core/src/lib/pdf.ts`.
 
-2. Port the full application state.
+   The web app now keeps only browser download plumbing in `apps/web/src/lib/pdf.ts`, while both web and mobile can reuse the same PDF content generator.
 
-   Add the state that exists in the web app but is missing in mobile:
+3. Full mobile calculator state.
 
-   - `language`
-   - `additionalAnnualPayment`
-   - `additionalPaymentStrategy`
-   - `showPlan`
-   - `selectedChartYear`
-   - `archivedPlans`
-   - archived plan draft names
-   - archive input name
-   - archive feedback
+   `apps/mobile/App.tsx` now includes:
 
-3. Add persistence for inputs and archived plans.
-
-   Replace the web app's `localStorage` usage with native storage, likely `@react-native-async-storage/async-storage`.
-
-   The persisted data should include current calculator inputs, selected language, and up to 20 archived plans.
-
-4. Port localization.
-
-   Use `TRANSLATIONS` from `packages/core` in mobile and add a native language picker.
-
-   Replace `getBrowserLanguage()` with a mobile-safe default, either a simple fallback or a device locale helper such as `expo-localization`.
-
-5. Replace the mobile input component.
-
-   The web `InputField` supports European number parsing, min/max clamping, step buttons, long-press increments, grouping, and decimal precision.
-
-   Port this as a native `NumberInput` using `TextInput` and `Pressable`. The current mobile `NumericInput` only parses basic numbers and does not enforce the same constraints.
-
-6. Add missing calculator fields.
-
-   Mobile must add:
-
+   - language selection
+   - house cost
+   - down payment
+   - mortgage duration
+   - annual interest rate
+   - monthly bank cost
    - additional annual payment
    - additional payment strategy
-   - validation for down payment greater than house cost
-   - validation for additional annual payment greater than loan principal
+   - chart year selection
+   - archived plans
+   - full amortization plan visibility
 
-7. Port the full summary output.
+4. Native input parity.
 
-   Mobile currently shows only:
+   Replaced the simple mobile numeric input with a native `NumberInput` that supports:
+
+   - European number parsing
+   - formatted display
+   - decimal precision
+   - min/max clamping
+   - step buttons
+   - grouped numbers
+
+5. Localization.
+
+   Mobile now uses `TRANSLATIONS` from `packages/core` and supports English, Italian, French, and German through native segmented controls.
+
+6. Validation.
+
+   Mobile now matches the web validation rules:
+
+   - down payment cannot exceed house cost
+   - additional annual payment cannot exceed loan principal
+
+7. Full summary parity.
+
+   Mobile now shows the same summary surface as web:
 
    - loan principal
    - monthly payment
-   - total interest
-   - total paid
-   - calculated duration
-
-   It should also show:
-
    - monthly rate without bank cost
    - total capital paid
+   - total interest
    - total additional payments
    - total capital plus interest
    - total bank costs
+   - total paid
    - interest saved
    - duration saved
 
-8. Implement the chart.
+8. Native chart inspection.
 
-   Port the web chart behavior to native using `react-native-svg` and a native slider such as `@react-native-community/slider`.
+   Mobile now computes the same yearly chart data as web and renders a dependency-free native chart inspector with year navigation and proportional bars for:
 
-   Reuse the chart data calculation from the web app, but render with native SVG primitives instead of DOM `<svg>` elements.
+   - remaining capital
+   - reimbursed capital
+   - paid interest
 
-9. Implement archived plans.
+9. Archived plans.
 
-   Add the full archived plan workflow:
+   Mobile now supports:
 
-   - archive name input
-   - save current plan
-   - restore archived plan
-   - update archived plan with current inputs
-   - delete archived plan
+   - naming the current plan
+   - archiving the current plan
+   - restoring archived plans
+   - saving current changes into an archived plan
+   - deleting archived plans
    - archive feedback messages
+   - limiting archives to `MAX_ARCHIVED_PLANS`
 
-   Use `FlatList` for archived plans if the list can grow.
+10. Persistence.
 
-10. Implement the installment plan list.
+    Mobile now persists calculator inputs and archived plans through `expo-file-system`.
 
-    Mobile should show and hide the full amortization plan, including monthly payment, principal, interest, bank cost, additional payment, and remaining capital.
+11. Installment plan list.
 
-    Use `FlatList` instead of mapping every installment inside one `ScrollView`, because a long mortgage can produce hundreds of rows.
+    Mobile now shows and hides the full amortization plan, including:
 
-11. Adapt PDF export.
+    - payment
+    - principal
+    - interest
+    - bank cost
+    - additional payment
+    - remaining capital
+    - plan totals
 
-    The current web PDF helper creates a `Blob` and downloads it through `document`, which will not work on native.
+12. Mobile PDF export.
 
-    Refactor PDF generation into a pure shared function that returns PDF content as text, bytes, or base64. Then create separate platform wrappers:
+    Mobile now creates the mortgage plan PDF content with shared core logic and writes the PDF file into the app document directory with `expo-file-system`.
 
-    - web wrapper: `Blob` plus download link
-    - mobile wrapper: `expo-file-system` plus `expo-sharing`
+13. Verification.
 
-12. Add mobile dependencies.
-
-    Likely install with `npx expo install`:
-
-    - `@react-native-async-storage/async-storage`
-    - `@react-native-picker/picker`
-    - `@react-native-community/slider`
-    - `react-native-svg`
-    - `expo-file-system`
-    - `expo-sharing`
-    - `expo-localization`
-
-13. Refactor shared logic.
-
-    Move reusable non-UI logic out of `apps/web/src/App.tsx` and into `packages/core`.
-
-    Good candidates:
-
-    - default inputs
-    - persisted input validation
-    - archive parsing
-    - archive limits
-    - chart data generation
-    - PDF line generation
-    - language locale mapping
-
-14. Verify the migration.
-
-    Run the repo tests and Expo bundle checks:
+    Completed checks:
 
     ```bash
-    npm test
-    cd apps/mobile
-    npx expo export --platform android --clear
-    npx expo export --platform ios --clear
+    npx tsc --noEmit -p apps/mobile/tsconfig.json
+    npm run test
+    npx expo export --platform android --output-dir /private/tmp/mortgage-mobile-export --clear
+    npm run build:web
     ```
 
-    Manually test:
+## Native Differences
 
-    - input editing and clamping
-    - language switching
-    - persistence after app restart
-    - archived plan save, update, restore, and delete
-    - chart slider behavior
-    - installment list rendering performance
-    - PDF file creation and sharing on device or emulator
+The mobile app intentionally uses dependency-light native equivalents instead of copying the web implementation directly.
 
-## Suggested Implementation Order
+1. Chart rendering.
 
-1. Shared pure logic extraction into `packages/core`.
-2. Native input and form parity.
-3. Summary and validation parity.
-4. Persistence and language selection.
-5. Archived plans.
-6. Chart.
-7. Installment list.
-8. PDF export.
-9. Final native QA pass.
+   Web uses SVG line charts. Mobile currently uses native proportional bars and year step controls. This preserves the same computed data and inspection workflow without adding `react-native-svg` and slider dependencies.
+
+2. Storage.
+
+   The original report suggested AsyncStorage. Mobile currently uses `expo-file-system`, which is already available in the Expo dependency tree and works for both persisted inputs and archived plan JSON.
+
+3. PDF sharing.
+
+   Mobile currently writes the PDF to the app document directory and reports the file path. A platform share sheet still requires adding `expo-sharing`.
+
+## Remaining Enhancements
+
+1. Add native share sheet support with `expo-sharing`.
+
+2. Replace the dependency-free chart inspector with `react-native-svg` plus a native slider if visual parity with the web line chart is required.
+
+3. Consider `FlatList` for very long installment plans if scroll performance becomes an issue on lower-end devices.
+
+4. Add device-locale default language detection with `expo-localization`.
+
+5. Manually test on Android and iOS devices or emulators:
+
+   - persistence after app restart
+   - archive save, update, restore, and delete
+   - PDF file creation
+   - long amortization plan scrolling
+   - language switching
