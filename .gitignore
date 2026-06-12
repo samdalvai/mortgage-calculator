@@ -6,3 +6,4 @@ dist
 *.local
 .test-dist
 *.tsbuildinfo
+apps/mobile/.expo
