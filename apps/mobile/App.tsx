@@ -15,11 +15,9 @@ import {
 } from 'react-native'
 
 import {
-  ARCHIVE_STORAGE_KEY,
   EURO_NUMBER_LOCALE,
   LANGUAGE_LOCALE,
   MAX_ARCHIVED_PLANS,
-  STORAGE_KEY,
   SUPPORTED_LANGUAGE_OPTIONS,
   TRANSLATIONS,
   buildChartData,
@@ -45,8 +43,8 @@ import { NumberInput } from './components/NumberInput'
 import { SegmentedControl } from './components/SegmentedControl'
 
 const DATA_DIRECTORY = `${FileSystem.documentDirectory ?? ''}mortgage-calculator/`
-const INPUTS_FILE = `${DATA_DIRECTORY}${STORAGE_KEY}.json`
-const ARCHIVE_FILE = `${DATA_DIRECTORY}${ARCHIVE_STORAGE_KEY}.json`
+const INPUTS_FILE = `${DATA_DIRECTORY}inputs.json`
+const ARCHIVE_FILE = `${DATA_DIRECTORY}archived-plans.json`
 
 const getDeviceLanguage = (): SupportedLanguage => {
   const supportedLanguages = SUPPORTED_LANGUAGE_OPTIONS.map((option) => option.code)
