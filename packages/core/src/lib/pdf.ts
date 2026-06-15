@@ -1,5 +1,4 @@
 import type { Translation } from '../i18n/translations'
-
 import { formatCurrencyForPdf } from './formatting'
 
 const PDF_PAGE_WIDTH = 595
@@ -21,7 +20,7 @@ const PDF_COLUMN_WIDTHS = {
   remaining: 14,
 } as const
 
-type PdfInstallment = {
+export type PdfInstallment = {
   month: number
   payment: number
   principal: number
@@ -31,7 +30,7 @@ type PdfInstallment = {
   remainingPrincipal: number
 }
 
-type DownloadMortgagePlanPdfParams = {
+export type MortgagePlanPdfParams = {
   copy: Translation
   formatter: Intl.NumberFormat
   houseCost: number
@@ -87,7 +86,7 @@ const createPdfTableLine = (
     padPdfCell(remainingCapital, PDF_COLUMN_WIDTHS.remaining),
   ].join(' | ')
 
-const createPdfDocumentFromLines = (lines: string[]) => {
+export const createPdfDocumentFromLines = (lines: string[]) => {
   const longestLineLength = lines.reduce((longest, line) => Math.max(longest, line.length), 0)
   const availableWidth = PDF_PAGE_WIDTH - PDF_HORIZONTAL_MARGIN * 2
   const computedFontSize =
@@ -147,10 +146,10 @@ ET`
   })
   documentContent += `trailer\n<< /Size ${orderedObjectIds.length + 1} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF`
 
-  return new Blob([documentContent], { type: 'application/pdf' })
+  return documentContent
 }
 
-export const downloadMortgagePlanPdf = ({
+export const createMortgagePlanPdfDocument = ({
   copy,
   formatter,
   houseCost,
@@ -170,7 +169,7 @@ export const downloadMortgagePlanPdf = ({
   totalPaid,
   totalBankCosts,
   installments,
-}: DownloadMortgagePlanPdfParams) => {
+}: MortgagePlanPdfParams) => {
   const tableHeaderLine = createPdfTableLine(
     copy.pdfMonthHeader,
     copy.pdfPaymentHeader,
@@ -227,11 +226,5 @@ export const downloadMortgagePlanPdf = ({
     ),
   ]
 
-  const pdfBlob = createPdfDocumentFromLines(lines)
-  const pdfDownloadUrl = URL.createObjectURL(pdfBlob)
-  const linkElement = document.createElement('a')
-  linkElement.href = pdfDownloadUrl
-  linkElement.download = `mortgage-plan-${new Date().toISOString().slice(0, 10)}.pdf`
-  linkElement.click()
-  URL.revokeObjectURL(pdfDownloadUrl)
+  return createPdfDocumentFromLines(lines)
 }

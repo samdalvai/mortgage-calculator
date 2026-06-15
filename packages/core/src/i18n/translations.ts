@@ -480,12 +480,27 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
 
 const SUPPORTED_LANGUAGES: SupportedLanguage[] = ['en', 'it', 'fr', 'de']
 
+type NavigatorLanguageSource = {
+  language?: string
+  languages?: readonly string[]
+}
+
+const getNavigatorLanguageSource = (): NavigatorLanguageSource | undefined => {
+  const globalNavigator = (globalThis as { navigator?: NavigatorLanguageSource }).navigator
+  return globalNavigator
+}
+
 export const getBrowserLanguage = (): SupportedLanguage => {
-  if (typeof navigator === 'undefined') {
+  const navigatorLanguageSource = getNavigatorLanguageSource()
+
+  if (!navigatorLanguageSource) {
     return 'en'
   }
 
-  const languageCandidates = [...navigator.languages, navigator.language]
+  const languageCandidates = [
+    ...(navigatorLanguageSource.languages ?? []),
+    navigatorLanguageSource.language,
+  ].filter((candidate): candidate is string => typeof candidate === 'string')
 
   for (const candidate of languageCandidates) {
     const normalized = candidate.toLowerCase().split('-')[0]

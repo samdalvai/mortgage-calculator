@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type PointerEvent } from 'react'
 
-import { EURO_NUMBER_LOCALE } from '../lib/formatting'
+import { EURO_NUMBER_LOCALE } from '../../../../packages/core/src'
 
 export type InputFieldProps = {
   id: string

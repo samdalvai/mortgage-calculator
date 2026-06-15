@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 
-import { EURO_NUMBER_LOCALE } from '../lib/formatting'
+import { EURO_NUMBER_LOCALE } from '../../../../packages/core/src'
 
 export type ChartPoint = {
   year: number
