@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
 
-import { EURO_NUMBER_LOCALE } from '../../../packages/core/src'
+import { EURO_NUMBER_LOCALE, parseLocalizedNumber } from '../../../packages/core/src'
 
 type NumberInputProps = {
   label: string
@@ -13,14 +13,6 @@ type NumberInputProps = {
   fractionDigits?: number
   useGrouping?: boolean
   onValueChange: (value: number) => void
-}
-
-const parseEuropeanNumber = (rawValue: string): number => {
-  const normalized = rawValue
-    .replace(/\./g, '')
-    .replace(/\s/g, '')
-    .replace(',', '.')
-  return Number(normalized)
 }
 
 const countFractionDigits = (stepValue: number): number => {
@@ -72,13 +64,15 @@ export function NumberInput({
     }
   }, [isFocused, resolvedFractionDigits, useGrouping, value])
 
+  const parseDraft = (rawValue: string) => parseLocalizedNumber(rawValue, resolvedFractionDigits)
+
   const commitValue = (rawValue: string) => {
     if (rawValue === '') {
       onValueChange(clampValue(0, min, max))
       return
     }
 
-    const parsedValue = parseEuropeanNumber(rawValue)
+    const parsedValue = parseDraft(rawValue)
     if (Number.isNaN(parsedValue)) {
       return
     }
@@ -88,7 +82,7 @@ export function NumberInput({
 
   const handleStepChange = (direction: 'increase' | 'decrease') => {
     const increment = step ?? 1
-    const parsedDraftValue = parseEuropeanNumber(draftValue)
+    const parsedDraftValue = parseDraft(draftValue)
     const baseValue = Number.isNaN(parsedDraftValue) ? value : parsedDraftValue
     const nextValue = direction === 'increase' ? baseValue + increment : baseValue - increment
     const clampedValue = clampValue(roundToDigits(nextValue, resolvedFractionDigits), min, max)
@@ -109,11 +103,11 @@ export function NumberInput({
           <Text style={styles.stepButtonText}>-</Text>
         </Pressable>
         <TextInput
-          keyboardType="decimal-pad"
+          keyboardType={resolvedFractionDigits > 0 ? 'decimal-pad' : 'number-pad'}
           value={draftValue}
           onFocus={() => {
             setIsFocused(true)
-            if (parseEuropeanNumber(draftValue) === 0) {
+            if (parseDraft(draftValue) === 0) {
               setDraftValue('')
             }
           }}
@@ -126,7 +120,7 @@ export function NumberInput({
               return
             }
 
-            const parsedValue = parseEuropeanNumber(draftValue)
+            const parsedValue = parseDraft(draftValue)
             if (Number.isNaN(parsedValue)) {
               setDraftValue(formatEuropeanNumber(value, resolvedFractionDigits, useGrouping))
               return
