@@ -40,7 +40,7 @@ The web and mobile apps intentionally keep separate UI layers while sharing the 
 - PDF export of the mortgage plan
 - Local archive for saving and restoring scenarios
 - Interface translations for English, Italian, French, and German
-- GitHub Pages deployment through `.github/workflows/deploy.yml`
+- GitHub Pages deployment through `.github/workflows/deploy.yml`, which only deploys after the checks in `.github/workflows/checks.yml` pass (lint, tests, mobile type check and an Android bundle of the mobile app). The same checks run on pull requests and on pushes to other branches.
 
 ### Mobile app
 
