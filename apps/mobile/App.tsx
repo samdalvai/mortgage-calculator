@@ -29,6 +29,7 @@ import {
   getValidationErrorKind,
   parseArchivedPlans,
   parsePersistedInputs,
+  resolveSupportedLanguage,
   type AdditionalPaymentStrategy,
   type ArchivedPlan,
   type ArchivedPlanInputs,
@@ -46,22 +47,8 @@ const DATA_DIRECTORY = `${FileSystem.documentDirectory ?? ''}mortgage-calculator
 const INPUTS_FILE = `${DATA_DIRECTORY}inputs.json`
 const ARCHIVE_FILE = `${DATA_DIRECTORY}archived-plans.json`
 
-const getDeviceLanguage = (): SupportedLanguage => {
-  const supportedLanguages = SUPPORTED_LANGUAGE_OPTIONS.map((option) => option.code)
-
-  for (const locale of Localization.getLocales()) {
-    const candidates = [locale.languageCode, locale.languageTag]
-
-    for (const candidate of candidates) {
-      const normalized = candidate?.toLowerCase().split('-')[0]
-      if (normalized && supportedLanguages.includes(normalized as SupportedLanguage)) {
-        return normalized as SupportedLanguage
-      }
-    }
-  }
-
-  return 'en'
-}
+const getDeviceLanguage = (): SupportedLanguage =>
+  resolveSupportedLanguage(Localization.getLocales().flatMap((locale) => [locale.languageCode, locale.languageTag]))
 
 const DEFAULT_INPUTS = createDefaultInputs(getDeviceLanguage())
 

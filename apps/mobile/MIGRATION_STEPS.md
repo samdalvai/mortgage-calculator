@@ -148,7 +148,11 @@ This document tracks the migration of `apps/mobile` into a native version of the
 
     The screen uses `react-native-safe-area-context` instead of React Native's iOS-only `SafeAreaView`, so content stays clear of the status bar, notches and the Android gesture bar on both platforms. The Android status bar is explicitly translucent and the bottom inset is added to the list padding, so the last items can scroll above the gesture bar.
 
-16. Verification.
+16. Tests.
+
+    Device-language detection now uses the shared `resolveSupportedLanguage` helper (also used by the web app's browser detection). `npm run test` runs every file in `tests/`, covering mortgage calculation, number parsing, language detection, persisted input and archive parsing, validation, chart data, and PDF generation including its cross-reference table. Tests are compiled to CommonJS so the shared code's extensionless imports resolve in Node.
+
+17. Verification.
 
     Completed checks:
 

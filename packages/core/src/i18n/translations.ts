@@ -510,6 +510,25 @@ const getNavigatorLanguageSource = (): NavigatorLanguageSource | undefined => {
   return globalNavigator
 }
 
+/**
+ * Picks the first supported language from a list of locale identifiers in order of preference,
+ * such as "it-IT", "de_CH" or "fr". Falls back to English when none is supported.
+ */
+export const resolveSupportedLanguage = (candidates: ReadonlyArray<string | null | undefined>): SupportedLanguage => {
+  for (const candidate of candidates) {
+    if (typeof candidate !== 'string') {
+      continue
+    }
+
+    const normalized = candidate.trim().toLowerCase().split(/[-_]/)[0]
+    if (SUPPORTED_LANGUAGES.includes(normalized as SupportedLanguage)) {
+      return normalized as SupportedLanguage
+    }
+  }
+
+  return 'en'
+}
+
 export const getBrowserLanguage = (): SupportedLanguage => {
   const navigatorLanguageSource = getNavigatorLanguageSource()
 
@@ -517,17 +536,5 @@ export const getBrowserLanguage = (): SupportedLanguage => {
     return 'en'
   }
 
-  const languageCandidates = [
-    ...(navigatorLanguageSource.languages ?? []),
-    navigatorLanguageSource.language,
-  ].filter((candidate): candidate is string => typeof candidate === 'string')
-
-  for (const candidate of languageCandidates) {
-    const normalized = candidate.toLowerCase().split('-')[0]
-    if (SUPPORTED_LANGUAGES.includes(normalized as SupportedLanguage)) {
-      return normalized as SupportedLanguage
-    }
-  }
-
-  return 'en'
+  return resolveSupportedLanguage([...(navigatorLanguageSource.languages ?? []), navigatorLanguageSource.language])
 }

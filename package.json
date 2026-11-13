@@ -11,7 +11,7 @@
     "preview": "vite preview --config apps/web/vite.config.ts",
     "lint": "eslint .",
     "deploy": "npm run build:web",
-    "test": "tsc -p tsconfig.tests.json && node .test-dist/tests/mortgage.test.js && node .test-dist/tests/number-parsing.test.js"
+    "test": "tsc -p tsconfig.tests.json && echo '{\"type\":\"commonjs\"}' > .test-dist/package.json && for test in .test-dist/tests/*.test.js; do echo \"$test\" && node \"$test\" || exit 1; done"
   },
   "dependencies": {
     "react": "^18.3.1",
