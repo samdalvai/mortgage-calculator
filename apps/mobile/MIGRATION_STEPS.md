@@ -77,6 +77,7 @@ This document tracks the migration of `apps/mobile` into a native version of the
 
    - down payment cannot exceed house cost
    - additional annual payment cannot exceed loan principal
+   - mortgage duration is limited to 1-50 years (`MAX_MORTGAGE_YEARS`), also when loading saved inputs and archived plans, so the plan never exceeds 600 rows
 
 8. Full summary parity.
 

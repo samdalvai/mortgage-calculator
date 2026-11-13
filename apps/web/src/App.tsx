@@ -5,6 +5,7 @@ import { InputField } from './components/InputField'
 import { InteractiveChart, type ChartPoint } from './components/InteractiveChart'
 import { TRANSLATIONS, getBrowserLanguage, type SupportedLanguage } from '../../../packages/core/src'
 import { EURO_NUMBER_LOCALE, formatDurationLabel } from '../../../packages/core/src'
+import { MAX_MORTGAGE_YEARS, MIN_MORTGAGE_YEARS, clampMortgageYears } from '../../../packages/core/src'
 import { calculateMortgagePlan, type AdditionalPaymentStrategy } from '../../../packages/core/src'
 import { downloadMortgagePlanPdf } from './lib/pdf'
 
@@ -54,7 +55,8 @@ const toPersistedInputs = (parsed: Partial<PersistedInputs>): PersistedInputs =>
     parsed.language && ['en', 'it', 'fr', 'de'].includes(parsed.language) ? parsed.language : DEFAULT_INPUTS.language,
   houseCost: typeof parsed.houseCost === 'number' ? parsed.houseCost : DEFAULT_INPUTS.houseCost,
   downPayment: typeof parsed.downPayment === 'number' ? parsed.downPayment : DEFAULT_INPUTS.downPayment,
-  years: typeof parsed.years === 'number' ? parsed.years : DEFAULT_INPUTS.years,
+  years:
+    typeof parsed.years === 'number' && Number.isFinite(parsed.years) ? clampMortgageYears(parsed.years) : DEFAULT_INPUTS.years,
   annualInterestRate:
     typeof parsed.annualInterestRate === 'number' ? parsed.annualInterestRate : DEFAULT_INPUTS.annualInterestRate,
   monthlyBankCost: typeof parsed.monthlyBankCost === 'number' ? parsed.monthlyBankCost : DEFAULT_INPUTS.monthlyBankCost,
@@ -127,7 +129,10 @@ const readArchivedPlans = (): ArchivedPlan[] => {
             houseCost: typeof candidate.inputs.houseCost === 'number' ? candidate.inputs.houseCost : DEFAULT_INPUTS.houseCost,
             downPayment:
               typeof candidate.inputs.downPayment === 'number' ? candidate.inputs.downPayment : DEFAULT_INPUTS.downPayment,
-            years: typeof candidate.inputs.years === 'number' ? candidate.inputs.years : DEFAULT_INPUTS.years,
+            years:
+              typeof candidate.inputs.years === 'number' && Number.isFinite(candidate.inputs.years)
+                ? clampMortgageYears(candidate.inputs.years)
+                : DEFAULT_INPUTS.years,
             annualInterestRate:
               typeof candidate.inputs.annualInterestRate === 'number'
                 ? candidate.inputs.annualInterestRate
@@ -499,7 +504,8 @@ function App() {
               id="years"
               label={copy.mortgageDurationYears}
               value={years}
-              min={1}
+              min={MIN_MORTGAGE_YEARS}
+              max={MAX_MORTGAGE_YEARS}
               step={1}
               onValueChange={setYears}
             />

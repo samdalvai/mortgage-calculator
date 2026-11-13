@@ -17,6 +17,8 @@ import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-
 import {
   EURO_NUMBER_LOCALE,
   LANGUAGE_LOCALE,
+  MAX_MORTGAGE_YEARS,
+  MIN_MORTGAGE_YEARS,
   MAX_ARCHIVED_PLANS,
   SUPPORTED_LANGUAGE_OPTIONS,
   TRANSLATIONS,
@@ -489,7 +491,7 @@ function MortgageCalculatorScreen() {
               <NumberInput copy={copy} label={copy.houseCost} value={houseCost} min={0} step={5000} onValueChange={setHouseCost} useGrouping />
               <NumberInput copy={copy} label={copy.downPayment} value={downPayment} min={0} step={1000} onValueChange={setDownPayment} useGrouping />
               {downPayment > houseCost ? <Text style={styles.errorText}>{copy.downPaymentExceedsHouseCostError}</Text> : null}
-              <NumberInput copy={copy} label={copy.mortgageDurationYears} value={years} min={1} step={1} onValueChange={setYears} />
+              <NumberInput copy={copy} label={copy.mortgageDurationYears} value={years} min={MIN_MORTGAGE_YEARS} max={MAX_MORTGAGE_YEARS} step={1} onValueChange={setYears} />
               <NumberInput
                 copy={copy}
                 label={copy.annualInterestRate}

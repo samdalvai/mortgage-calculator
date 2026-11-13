@@ -4,6 +4,12 @@ import type { SupportedLanguage } from '../i18n/translations'
 export const STORAGE_KEY = 'mortgage-calculator:inputs'
 export const ARCHIVE_STORAGE_KEY = 'mortgage-calculator:archived-plans'
 export const MAX_ARCHIVED_PLANS = 20
+export const MIN_MORTGAGE_YEARS = 1
+/** Longest supported mortgage; keeps the monthly plan to at most 600 rows. */
+export const MAX_MORTGAGE_YEARS = 50
+
+export const clampMortgageYears = (years: number) =>
+  Math.min(MAX_MORTGAGE_YEARS, Math.max(MIN_MORTGAGE_YEARS, Math.round(years)))
 
 export const LANGUAGE_LOCALE: Record<SupportedLanguage, string> = {
   en: 'en-US',
@@ -67,7 +73,8 @@ export const toPersistedInputs = (
     parsed.language && ['en', 'it', 'fr', 'de'].includes(parsed.language) ? parsed.language : fallbackInputs.language,
   houseCost: typeof parsed.houseCost === 'number' ? parsed.houseCost : fallbackInputs.houseCost,
   downPayment: typeof parsed.downPayment === 'number' ? parsed.downPayment : fallbackInputs.downPayment,
-  years: typeof parsed.years === 'number' ? parsed.years : fallbackInputs.years,
+  years:
+    typeof parsed.years === 'number' && Number.isFinite(parsed.years) ? clampMortgageYears(parsed.years) : fallbackInputs.years,
   annualInterestRate:
     typeof parsed.annualInterestRate === 'number' ? parsed.annualInterestRate : fallbackInputs.annualInterestRate,
   monthlyBankCost: typeof parsed.monthlyBankCost === 'number' ? parsed.monthlyBankCost : fallbackInputs.monthlyBankCost,

@@ -1,5 +1,7 @@
 import {
   MAX_ARCHIVED_PLANS,
+  MAX_MORTGAGE_YEARS,
+  clampMortgageYears,
   buildChartData,
   createDefaultInputs,
   getMaxChartAmount,
@@ -160,6 +162,31 @@ function testBuildChartDataWithPartialLastYear() {
   assertEqual(chartData[chartData.length - 1].remainingCapital, 0, 'shortened loan ends at zero')
 }
 
+function testMortgageDurationLimit() {
+  assertEqual(clampMortgageYears(25), 25, 'normal duration unchanged')
+  assertEqual(clampMortgageYears(2500), MAX_MORTGAGE_YEARS, 'long duration capped')
+  assertEqual(clampMortgageYears(0), 1, 'zero raised to one year')
+  assertEqual(clampMortgageYears(-5), 1, 'negative raised to one year')
+  assertEqual(clampMortgageYears(12.6), 13, 'fractional years rounded')
+
+  assertEqual(parsePersistedInputs(JSON.stringify({ years: 2500 }), fallback).years, MAX_MORTGAGE_YEARS, 'saved inputs capped')
+  const plans = parseArchivedPlans(
+    JSON.stringify([{ id: 'x', name: 'Huge', createdAt: '2026-01-01T10:00:00.000Z', inputs: { years: 9999 } }]),
+    fallback,
+  )
+  assertEqual(plans[0].inputs.years, MAX_MORTGAGE_YEARS, 'archived plan capped')
+
+  const longestPlan = calculateMortgagePlan({
+    houseCost: 250000,
+    downPayment: 50000,
+    years: MAX_MORTGAGE_YEARS,
+    annualInterestRate: 0.03,
+    monthlyBankCost: 0,
+  })
+  assertEqual(longestPlan.installments.length, MAX_MORTGAGE_YEARS * 12, 'longest plan has 600 rows')
+}
+
+testMortgageDurationLimit()
 testParsePersistedInputsFallbacks()
 testParsePersistedInputsKeepsValidFields()
 testParsePersistedInputsReplacesInvalidFields()
