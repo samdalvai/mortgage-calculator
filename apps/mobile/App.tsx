@@ -6,13 +6,13 @@ import {
   Alert,
   FlatList,
   type ListRenderItemInfo,
-  SafeAreaView,
   StatusBar,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native'
+import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import {
   EURO_NUMBER_LOCALE,
@@ -93,6 +93,15 @@ const writeStorageFile = async (path: string, contents: string) => {
 const createArchiveId = () => `${Date.now()}-${Math.random().toString(36).slice(2)}`
 
 export default function App() {
+  return (
+    <SafeAreaProvider>
+      <MortgageCalculatorScreen />
+    </SafeAreaProvider>
+  )
+}
+
+function MortgageCalculatorScreen() {
+  const insets = useSafeAreaInsets()
   const [isHydrated, setIsHydrated] = useState(false)
   const [language, setLanguage] = useState<SupportedLanguage>(DEFAULT_INPUTS.language)
   const [houseCost, setHouseCost] = useState(DEFAULT_INPUTS.houseCost)
@@ -413,8 +422,8 @@ export default function App() {
   )
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" />
+    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
       <FlatList
         data={visibleInstallments}
         keyExtractor={(installment) => installment.month.toString()}
@@ -422,7 +431,7 @@ export default function App() {
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         automaticallyAdjustKeyboardInsets
-        contentContainerStyle={styles.container}
+        contentContainerStyle={[styles.container, { paddingBottom: styles.container.paddingBottom + insets.bottom }]}
         ListHeaderComponent={
           <View style={styles.topSections}>
             <View style={styles.header}>

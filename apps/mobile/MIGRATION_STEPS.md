@@ -144,7 +144,11 @@ This document tracks the migration of `apps/mobile` into a native version of the
 
     `app.json` now defines version `1.0.0`, the `com.samdalvai.mortgagecalculator` app identifier for Android and iOS, the app icon, Android adaptive icon, splash screen and a fixed dark interface style. `eas.json` provides a `preview` profile that builds an installable Android APK (and an iOS simulator build) and a `production` profile for store builds. See `README.md` for the commands.
 
-15. Verification.
+15. Safe areas.
+
+    The screen uses `react-native-safe-area-context` instead of React Native's iOS-only `SafeAreaView`, so content stays clear of the status bar, notches and the Android gesture bar on both platforms. The Android status bar is explicitly translucent and the bottom inset is added to the list padding, so the last items can scroll above the gesture bar.
+
+16. Verification.
 
     Completed checks:
 
