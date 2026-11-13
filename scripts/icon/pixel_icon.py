@@ -66,9 +66,9 @@ def build_grid():
 
     # Windows: dark frame, lit glass with a highlight and a warm lower edge.
     for x0 in (8, 19):
-        rect(x0, 18, x0 + 4, 22, 'K')
-        rect(x0 + 1, 19, x0 + 3, 21, 'Y')
-        rect(x0 + 1, 21, x0 + 3, 21, 'y')
+        rect(x0, 18, x0 + 4, 21, 'K')
+        rect(x0 + 1, 19, x0 + 3, 20, 'Y')
+        rect(x0 + 1, 20, x0 + 3, 20, 'y')
         put(x0 + 1, 19, 'h')
 
     # Door with frame, shade and knob, centred under the apex.
@@ -83,17 +83,6 @@ def build_grid():
     for x in (5, 10, 21, 26):
         put(x, 28, 'L')
 
-    # Rising trend arrow in the sky: solid triangular head pointing up-right,
-    # with a 2 px shaft meeting the middle of its long edge.
-    for k in range(5):
-        rect(25 + k, 3 + k, 29, 3 + k, 'G')
-    rect(25, 3, 29, 3, 'L')
-    rect(29, 3, 29, 7, 'L')
-    for x in range(22, 27):
-        y = 32 - x
-        put(x, y, 'G')
-        put(x + 1, y, 'g')
-
     # 1 px outline around every shape.
     solid = [[grid[y][x] != '.' for x in range(N)] for y in range(N)]
     for y in range(N):
@@ -106,8 +95,47 @@ def build_grid():
                     grid[y][x] = 'K'
                     break
 
+    # Zigzag trend arrow drawn in front of the house, with its own outline on top.
+    trend = [['.'] * N for _ in range(N)]
+
+    def trend_put(x, y, ch):
+        if 0 <= x < N and 0 <= y < N:
+            trend[y][x] = ch
+
+    # One small zig near the ground, then a long rise across the facade.
+    points = [(3, 25), (7, 21), (11, 25), (26, 10)]
+    for (x0, y0), (x1, y1) in zip(points, points[1:]):
+        step_y = 1 if y1 > y0 else -1
+        for i in range(x1 - x0 + 1):
+            x, y = x0 + i, y0 + i * step_y
+            trend_put(x, y, 'G')
+            trend_put(x, y + 1, 'g')
+    # Arrowhead: solid triangle pointing up-right; the line meets the middle of its long edge.
+    head_x, head_y = 24, 8
+    for k in range(5):
+        for x in range(head_x + k, head_x + 5):
+            trend_put(x, head_y + k, 'G')
+    for x in range(head_x, head_x + 5):
+        trend_put(x, head_y, 'L')
+    for y in range(head_y, head_y + 5):
+        trend_put(head_x + 4, y, 'L')
+
+    for y in range(N):
+        for x in range(N):
+            if trend[y][x] != '.':
+                continue
+            for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                nx, ny = x + dx, y + dy
+                if 0 <= nx < N and 0 <= ny < N and trend[ny][nx] != '.':
+                    grid[y][x] = 'K'
+                    break
+    for y in range(N):
+        for x in range(N):
+            if trend[y][x] != '.':
+                grid[y][x] = trend[y][x]
+
     # A few faint stars in the empty sky.
-    for x, y in ((3, 2), (21, 1), (13, 2), (2, 11), (29, 13)):
+    for x, y in ((3, 2), (21, 1), (13, 2), (2, 11), (29, 14), (24, 3)):
         if grid[y][x] == '.':
             grid[y][x] = 'S'
     return grid
