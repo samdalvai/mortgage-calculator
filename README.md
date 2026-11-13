@@ -2,6 +2,8 @@
 
 A monorepo for a mortgage calculator with a GitHub Pages web app and an Expo mobile app shell.
 
+**Live web app:** https://samdalvai.github.io/mortgage-calculator/
+
 The app computes a French amortization schedule from the house cost, down payment, duration, annual interest rate, and monthly bank costs. It shows the monthly payment, total capital repaid, total interest, bank costs, overall amount paid, and a month-by-month repayment plan.
 
 ## Repository Layout
