@@ -25,8 +25,10 @@ import {
   createDefaultInputs,
   createMortgagePlanPdfDocument,
   formatDurationLabel,
+  getMortgagePlanPdfFileName,
   getMaxChartAmount,
   getValidationErrorKind,
+  isMortgagePlanPdfFileName,
   parseArchivedPlans,
   parsePersistedInputs,
   resolveSupportedLanguage,
@@ -85,6 +87,21 @@ const STORAGE_ERROR_COPY_KEY = {
   'save-archive': 'storageSaveArchiveError',
 } as const
 
+/** Deletes exported plan PDFs from a directory; used for the cache and for exports older app versions kept. */
+const removeExportedPdfs = async (directory: string) => {
+  const directoryInfo = await FileSystem.getInfoAsync(directory)
+  if (!directoryInfo.exists) {
+    return
+  }
+
+  const fileNames = await FileSystem.readDirectoryAsync(directory)
+  await Promise.all(
+    fileNames
+      .filter(isMortgagePlanPdfFileName)
+      .map((fileName) => FileSystem.deleteAsync(`${directory}${fileName}`, { idempotent: true })),
+  )
+}
+
 const createArchiveId = () => `${Date.now()}-${Math.random().toString(36).slice(2)}`
 
 export default function App() {
@@ -113,6 +130,8 @@ function MortgageCalculatorScreen() {
   const [archivedPlanDraftNames, setArchivedPlanDraftNames] = useState<Record<string, string>>({})
   const [archiveName, setArchiveName] = useState('')
   const [archiveFeedback, setArchiveFeedback] = useState<string | null>(null)
+  const [exportFeedback, setExportFeedback] = useState<string | null>(null)
+  const [isExportingPdf, setIsExportingPdf] = useState(false)
   const [storageError, setStorageError] = useState<StorageErrorKind | null>(null)
 
   const copy = TRANSLATIONS[language]
@@ -206,6 +225,7 @@ function MortgageCalculatorScreen() {
     }
 
     hydrate()
+    removeExportedPdfs(DATA_DIRECTORY).catch((error) => console.warn('Unable to remove old PDF exports', error))
 
     return () => {
       active = false
@@ -360,11 +380,19 @@ function MortgageCalculatorScreen() {
   }
 
   const handleExportPlanAsPdf = async () => {
-    if (validationError) {
+    if (validationError || isExportingPdf) {
       return
     }
 
+    setIsExportingPdf(true)
+    setExportFeedback(null)
+
     try {
+      const exportDirectory = FileSystem.cacheDirectory
+      if (!exportDirectory) {
+        throw new Error('Cache directory is unavailable.')
+      }
+
       const pdfDocument = createMortgagePlanPdfDocument({
         copy,
         formatter: euroFormatter,
@@ -387,8 +415,11 @@ function MortgageCalculatorScreen() {
         totalBankCosts: plan.totalBankCosts,
         installments: plan.installments,
       })
-      const fileUri = `${DATA_DIRECTORY}mortgage-plan-${new Date().toISOString().slice(0, 10)}.pdf`
-      await writeStorageFile(fileUri, pdfDocument)
+      // Exports only need to live until they are shared, so they go to the cache, which the OS may clear.
+      await removeExportedPdfs(exportDirectory)
+      const fileName = getMortgagePlanPdfFileName()
+      const fileUri = `${exportDirectory}${fileName}`
+      await FileSystem.writeAsStringAsync(fileUri, pdfDocument, { encoding: FileSystem.EncodingType.UTF8 })
 
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(fileUri, {
@@ -396,15 +427,18 @@ function MortgageCalculatorScreen() {
           UTI: 'com.adobe.pdf',
           dialogTitle: copy.exportPlanAsPdf,
         })
-        setArchiveFeedback(copy.exportPlanAsPdf)
+        setExportFeedback(copy.pdfExportedMessage(fileName))
         return
       }
 
-      setArchiveFeedback(`${copy.exportPlanAsPdf}: ${fileUri}`)
-      Alert.alert(copy.exportPlanAsPdf, fileUri)
+      const message = copy.pdfSharingUnavailableMessage(fileUri)
+      setExportFeedback(message)
+      Alert.alert(copy.exportPlanAsPdf, message)
     } catch (error) {
       console.warn('Unable to export PDF', error)
       Alert.alert(copy.exportPlanAsPdf, copy.pdfExportError)
+    } finally {
+      setIsExportingPdf(false)
     }
   }
 
@@ -542,8 +576,13 @@ function MortgageCalculatorScreen() {
                   onPress={() => setShowPlan((current) => !current)}
                 />
                 <ActionButton label={copy.archivePlan} disabled={Boolean(validationError)} onPress={handleArchiveCurrentPlan} />
-                <ActionButton label={copy.exportPlanAsPdf} disabled={Boolean(validationError)} onPress={handleExportPlanAsPdf} />
+                <ActionButton
+                  label={copy.exportPlanAsPdf}
+                  disabled={Boolean(validationError) || isExportingPdf}
+                  onPress={handleExportPlanAsPdf}
+                />
               </View>
+              {exportFeedback ? <Text style={styles.feedbackText}>{exportFeedback}</Text> : null}
             </View>
 
             <View style={styles.card}>

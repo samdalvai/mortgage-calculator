@@ -140,7 +140,7 @@ This document tracks the migration of `apps/mobile` into a native version of the
 
 13. Mobile PDF export.
 
-    Mobile now creates the mortgage plan PDF content with shared core logic, writes the PDF file into the app document directory with `expo-file-system`, and opens the platform share sheet with `expo-sharing` when available.
+    Mobile now creates the mortgage plan PDF content with shared core logic, writes it to the app cache directory with `expo-file-system` (replacing earlier exports, which the OS may also clear), and opens the platform share sheet with `expo-sharing` when available. A translated confirmation with the file name appears under the actions, the export button is disabled while a PDF is being created, and PDFs that older versions kept in the document directory are removed on start-up.
 
 14. Build configuration.
 
@@ -177,7 +177,7 @@ The mobile app intentionally keeps a native implementation rather than copying D
 
 2. PDF fallback.
 
-   Mobile opens the native share sheet when available. If the share API is unavailable on a platform, it reports the generated file path.
+   Mobile opens the native share sheet when available. If the share API is unavailable on a platform, it shows a translated message with the generated file path.
 
 ## Remaining Enhancements
 

@@ -55,6 +55,8 @@ function testEveryLanguageTranslatesAccessibilityAndErrorTexts() {
 
     assertEqual(copy.decreaseValue('X').includes('X'), true, `${language}.decreaseValue includes the field label`)
     assertEqual(copy.increaseValue('X').includes('X'), true, `${language}.increaseValue includes the field label`)
+    assertEqual(copy.pdfExportedMessage('plan.pdf').includes('plan.pdf'), true, `${language}.pdfExportedMessage includes the file name`)
+    assertEqual(copy.pdfSharingUnavailableMessage('/tmp/plan.pdf').includes('/tmp/plan.pdf'), true, `${language}.pdfSharingUnavailableMessage includes the path`)
   }
 }
 

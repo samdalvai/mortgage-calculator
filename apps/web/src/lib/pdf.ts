@@ -1,4 +1,8 @@
-import { createMortgagePlanPdfDocument, type MortgagePlanPdfParams } from '../../../../packages/core/src'
+import {
+  createMortgagePlanPdfDocument,
+  getMortgagePlanPdfFileName,
+  type MortgagePlanPdfParams,
+} from '../../../../packages/core/src'
 
 export const downloadMortgagePlanPdf = (params: MortgagePlanPdfParams) => {
   const pdfDocument = createMortgagePlanPdfDocument(params)
@@ -6,7 +10,7 @@ export const downloadMortgagePlanPdf = (params: MortgagePlanPdfParams) => {
   const pdfDownloadUrl = URL.createObjectURL(pdfBlob)
   const linkElement = document.createElement('a')
   linkElement.href = pdfDownloadUrl
-  linkElement.download = `mortgage-plan-${new Date().toISOString().slice(0, 10)}.pdf`
+  linkElement.download = getMortgagePlanPdfFileName()
   linkElement.click()
   URL.revokeObjectURL(pdfDownloadUrl)
 }

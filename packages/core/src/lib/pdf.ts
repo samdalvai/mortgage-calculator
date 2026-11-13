@@ -86,6 +86,16 @@ const createPdfTableLine = (
     padPdfCell(remainingCapital, PDF_COLUMN_WIDTHS.remaining),
   ].join(' | ')
 
+/** File name for an exported plan, using the local calendar date, e.g. mortgage-plan-2026-11-13.pdf. */
+export const getMortgagePlanPdfFileName = (date: Date = new Date()) => {
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `mortgage-plan-${date.getFullYear()}-${month}-${day}.pdf`
+}
+
+/** Whether a file name looks like one produced by getMortgagePlanPdfFileName. */
+export const isMortgagePlanPdfFileName = (fileName: string) => /^mortgage-plan-\d{4}-\d{2}-\d{2}\.pdf$/.test(fileName)
+
 export const createPdfDocumentFromLines = (lines: string[]) => {
   const longestLineLength = lines.reduce((longest, line) => Math.max(longest, line.length), 0)
   const availableWidth = PDF_PAGE_WIDTH - PDF_HORIZONTAL_MARGIN * 2

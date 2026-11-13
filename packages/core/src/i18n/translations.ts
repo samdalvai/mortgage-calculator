@@ -41,6 +41,8 @@ export type Translation = {
   storageSaveInputsError: string
   storageSaveArchiveError: string
   pdfExportError: string
+  pdfExportedMessage: (fileName: string) => string
+  pdfSharingUnavailableMessage: (path: string) => string
   archiveRenamedMessage: (name: string) => string
   archiveUpdatedMessage: (name: string) => string
   renameArchivedPlan: string
@@ -148,6 +150,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     storageSaveInputsError: 'Your inputs could not be saved on this device.',
     storageSaveArchiveError: 'Archived plans could not be saved on this device.',
     pdfExportError: 'The PDF could not be created.',
+    pdfExportedMessage: (fileName: string) => `Created the PDF "${fileName}".`,
+    pdfSharingUnavailableMessage: (path: string) => `Sharing is not available on this device. The PDF was saved to ${path}.`,
     archiveRenamedMessage: (name: string) => `Renamed archived plan to "${name}".`,
     archiveUpdatedMessage: (name: string) => `Updated archived plan "${name}" with your current changes.`,
     renameArchivedPlan: 'Rename archived plan',
@@ -253,6 +257,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     storageSaveInputsError: 'Impossibile salvare i dati inseriti su questo dispositivo.',
     storageSaveArchiveError: 'Impossibile salvare i piani archiviati su questo dispositivo.',
     pdfExportError: 'Impossibile creare il PDF.',
+    pdfExportedMessage: (fileName: string) => `PDF "${fileName}" creato.`,
+    pdfSharingUnavailableMessage: (path: string) => `La condivisione non è disponibile su questo dispositivo. Il PDF è stato salvato in ${path}.`,
     archiveRenamedMessage: (name: string) => `Piano archiviato rinominato in "${name}".`,
     archiveUpdatedMessage: (name: string) => `Il piano archiviato "${name}" è stato aggiornato con le modifiche correnti.`,
     renameArchivedPlan: 'Rinomina piano archiviato',
@@ -360,6 +366,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     storageSaveInputsError: "Impossible d'enregistrer vos saisies sur cet appareil.",
     storageSaveArchiveError: "Impossible d'enregistrer les plans archivés sur cet appareil.",
     pdfExportError: 'Impossible de créer le PDF.',
+    pdfExportedMessage: (fileName: string) => `PDF « ${fileName} » créé.`,
+    pdfSharingUnavailableMessage: (path: string) => `Le partage n'est pas disponible sur cet appareil. Le PDF a été enregistré dans ${path}.`,
     archiveRenamedMessage: (name: string) => `Plan archivé renommé en "${name}".`,
     archiveUpdatedMessage: (name: string) => `Plan archivé "${name}" mis à jour avec vos modifications.`,
     renameArchivedPlan: 'Renommer le plan archivé',
@@ -467,6 +475,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     storageSaveInputsError: 'Ihre Eingaben konnten auf diesem Gerät nicht gespeichert werden.',
     storageSaveArchiveError: 'Archivierte Pläne konnten auf diesem Gerät nicht gespeichert werden.',
     pdfExportError: 'Das PDF konnte nicht erstellt werden.',
+    pdfExportedMessage: (fileName: string) => `PDF „${fileName}“ erstellt.`,
+    pdfSharingUnavailableMessage: (path: string) => `Teilen ist auf diesem Gerät nicht verfügbar. Das PDF wurde unter ${path} gespeichert.`,
     archiveRenamedMessage: (name: string) => `Archivierter Plan wurde zu "${name}" umbenannt.`,
     archiveUpdatedMessage: (name: string) => `Archivierter Plan "${name}" wurde mit deinen aktuellen Änderungen aktualisiert.`,
     renameArchivedPlan: 'Archivierten Plan umbenennen',

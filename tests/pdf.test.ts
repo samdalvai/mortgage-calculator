@@ -1,7 +1,12 @@
 import { TRANSLATIONS } from '../packages/core/src/i18n/translations.js'
 import { EURO_NUMBER_LOCALE, formatCurrencyForPdf } from '../packages/core/src/lib/formatting.js'
 import { calculateMortgagePlan } from '../packages/core/src/lib/mortgage.js'
-import { createMortgagePlanPdfDocument, createPdfDocumentFromLines } from '../packages/core/src/lib/pdf.js'
+import {
+  createMortgagePlanPdfDocument,
+  createPdfDocumentFromLines,
+  getMortgagePlanPdfFileName,
+  isMortgagePlanPdfFileName,
+} from '../packages/core/src/lib/pdf.js'
 import { assert, assertEqual } from './assert.js'
 
 const formatter = new Intl.NumberFormat(EURO_NUMBER_LOCALE, { style: 'currency', currency: 'EUR', maximumFractionDigits: 2 })
@@ -93,3 +98,14 @@ function testMortgagePlanPdf() {
 testEscapesTextAndReplacesNonAscii()
 testCurrencyFormattingForPdf()
 testMortgagePlanPdf()
+
+function testPdfFileName() {
+  assertEqual(getMortgagePlanPdfFileName(new Date(2026, 0, 5, 23, 59)), 'mortgage-plan-2026-01-05.pdf', 'uses the local date')
+  assertEqual(getMortgagePlanPdfFileName(new Date(2026, 10, 13, 0, 1)), 'mortgage-plan-2026-11-13.pdf', 'just after midnight')
+  assertEqual(isMortgagePlanPdfFileName(getMortgagePlanPdfFileName()), true, 'generated names are recognised')
+  assertEqual(isMortgagePlanPdfFileName('inputs.json'), false, 'saved inputs are not export files')
+  assertEqual(isMortgagePlanPdfFileName('archived-plans.json'), false, 'saved plans are not export files')
+  assertEqual(isMortgagePlanPdfFileName('mortgage-plan-2026-11-13.pdf.bak'), false, 'only exact export names match')
+}
+
+testPdfFileName()
