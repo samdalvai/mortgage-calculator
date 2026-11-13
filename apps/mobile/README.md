@@ -54,4 +54,9 @@ eas build -p ios --profile production
 
 App identifiers are `com.samdalvai.mortgagecalculator` on both platforms. Bump `version` in `app.json` for each release, plus `android.versionCode` and `ios.buildNumber` for each store upload.
 
-App icon, Android adaptive icon and splash screen live in `assets/` and are rendered from the web app's house-and-chart favicon.
+App icon, Android adaptive icon and splash screen live in `assets/`. They share a pixel-art icon with the web app, drawn on a 32x32 grid in `scripts/icon/pixel_icon.py`. To change it, edit the grid and regenerate everything from the repository root:
+
+```bash
+python3 scripts/icon/pixel_icon.py   # web SVG icons + build SVGs
+node scripts/icon/render-png.cjs     # mobile PNGs (needs Playwright)
+```
