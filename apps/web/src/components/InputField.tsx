@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type PointerEvent } from 'react'
 
-import { EURO_NUMBER_LOCALE } from '../../../../packages/core/src'
+import { EURO_NUMBER_LOCALE, parseLocalizedNumber } from '../../../../packages/core/src'
 
 export type InputFieldProps = {
   id: string
@@ -17,14 +17,6 @@ export type InputFieldProps = {
 
 const LONG_PRESS_INITIAL_DELAY_MS = 400
 const LONG_PRESS_REPEAT_INTERVAL_MS = 120
-
-const parseEuropeanNumber = (rawValue: string): number => {
-  const normalized = rawValue
-    .replace(/\./g, '')
-    .replace(/\s/g, '')
-    .replace(',', '.')
-  return Number(normalized)
-}
 
 const countFractionDigits = (stepValue: number): number => {
   const normalized = stepValue.toString().toLowerCase()
@@ -107,13 +99,15 @@ export function InputField({
     }
   }, [])
 
+  const parseDraft = (rawValue: string) => parseLocalizedNumber(rawValue, resolvedFractionDigits)
+
   const commitValue = (rawValue: string) => {
     if (rawValue === '') {
       syncValue(0)
       return
     }
 
-    const parsedValue = parseEuropeanNumber(rawValue)
+    const parsedValue = parseDraft(rawValue)
 
     if (Number.isNaN(parsedValue)) {
       return
@@ -126,7 +120,7 @@ export function InputField({
 
   const handleStepChange = (direction: 'increase' | 'decrease') => {
     const increment = step ?? 1
-    const parsedDraftValue = parseEuropeanNumber(draftValueRef.current)
+    const parsedDraftValue = parseDraft(draftValueRef.current)
     const baseValue = Number.isNaN(parsedDraftValue) ? valueRef.current : parsedDraftValue
     const nextValue = direction === 'increase' ? baseValue + increment : baseValue - increment
     const roundedValue = roundToDigits(nextValue, resolvedFractionDigits)
@@ -224,12 +218,12 @@ export function InputField({
         <input
           id={id}
           type="text"
-          inputMode="decimal"
+          inputMode={resolvedFractionDigits > 0 ? 'decimal' : 'numeric'}
           className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-center text-slate-100 outline-none ring-emerald-400 focus:ring"
           value={draftValue}
           onFocus={() => {
             setIsFocused(true)
-            if (parseEuropeanNumber(draftValue) === 0) {
+            if (parseDraft(draftValue) === 0) {
               syncDraftValue('')
             }
           }}
@@ -240,7 +234,7 @@ export function InputField({
               return
             }
 
-            const parsedValue = parseEuropeanNumber(draftValue)
+            const parsedValue = parseDraft(draftValue)
             if (Number.isNaN(parsedValue)) {
               syncDraftValue(formatEuropeanNumber(value, resolvedFractionDigits, useGrouping))
               return
