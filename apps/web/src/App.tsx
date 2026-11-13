@@ -472,6 +472,7 @@ function App() {
         <div className="mt-6 grid gap-6 lg:grid-cols-[320px_1fr]">
           <form className="space-y-4 rounded-xl border border-slate-800 bg-slate-900 p-4 sm:p-5">
             <InputField
+              copy={copy}
               id="houseCost"
               label={copy.houseCost}
               value={houseCost}
@@ -481,6 +482,7 @@ function App() {
               useGrouping
             />
             <InputField
+              copy={copy}
               id="downPayment"
               label={copy.downPayment}
               value={downPayment}
@@ -493,6 +495,7 @@ function App() {
               <p className="text-sm font-medium text-rose-400">{copy.downPaymentExceedsHouseCostError}</p>
             ) : null}
             <InputField
+              copy={copy}
               id="years"
               label={copy.mortgageDurationYears}
               value={years}
@@ -501,6 +504,7 @@ function App() {
               onValueChange={setYears}
             />
             <InputField
+              copy={copy}
               id="annualInterestRate"
               label={copy.annualInterestRate}
               value={annualInterestRate}
@@ -512,6 +516,7 @@ function App() {
               hint={copy.annualInterestRateHint}
             />
             <InputField
+              copy={copy}
               id="monthlyBankCost"
               label={copy.monthlyBankCost}
               value={monthlyBankCost}
@@ -522,6 +527,7 @@ function App() {
               fractionDigits={2}
             />
             <InputField
+              copy={copy}
               id="additionalAnnualPayment"
               label={copy.additionalAnnualPayment}
               value={additionalAnnualPayment}
@@ -582,6 +588,7 @@ function App() {
               {chartData.length > 0 && !validationError ? (
                 <>
                   <InteractiveChart
+                    copy={copy}
                     data={chartData}
                     maxAmount={maxChartAmount}
                     selectedYear={selectedChartYear}

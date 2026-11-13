@@ -1,4 +1,4 @@
-import { getBrowserLanguage, resolveSupportedLanguage } from '../packages/core/src/i18n/translations.js'
+import { TRANSLATIONS, getBrowserLanguage, resolveSupportedLanguage } from '../packages/core/src/i18n/translations.js'
 import { assertEqual } from './assert.js'
 
 function testResolvesFirstSupportedLanguage() {
@@ -43,3 +43,19 @@ function testBrowserLanguageUsesNavigator() {
 testResolvesFirstSupportedLanguage()
 testFallsBackToEnglish()
 testBrowserLanguageUsesNavigator()
+
+function testEveryLanguageTranslatesAccessibilityAndErrorTexts() {
+  for (const [language, copy] of Object.entries(TRANSLATIONS)) {
+    for (const key of ['selectChartYear', 'storageReadError', 'storageSaveInputsError', 'storageSaveArchiveError', 'pdfExportError'] as const) {
+      assertEqual(copy[key].trim().length > 0, true, `${language}.${key} is not empty`)
+      if (language !== 'en') {
+        assertEqual(copy[key] !== TRANSLATIONS.en[key], true, `${language}.${key} is translated`)
+      }
+    }
+
+    assertEqual(copy.decreaseValue('X').includes('X'), true, `${language}.decreaseValue includes the field label`)
+    assertEqual(copy.increaseValue('X').includes('X'), true, `${language}.increaseValue includes the field label`)
+  }
+}
+
+testEveryLanguageTranslatesAccessibilityAndErrorTexts()

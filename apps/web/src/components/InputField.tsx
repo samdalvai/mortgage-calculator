@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, type PointerEvent } from 'react'
 
-import { EURO_NUMBER_LOCALE, parseLocalizedNumber } from '../../../../packages/core/src'
+import { EURO_NUMBER_LOCALE, parseLocalizedNumber, type Translation } from '../../../../packages/core/src'
 
 export type InputFieldProps = {
+  copy: Pick<Translation, 'decreaseValue' | 'increaseValue'>
   id: string
   label: string
   value: number
@@ -44,6 +45,7 @@ const formatEuropeanNumber = (value: number, fractionDigits: number, useGrouping
   }).format(value)
 
 export function InputField({
+  copy,
   id,
   label,
   value,
@@ -211,7 +213,7 @@ export function InputField({
           onPointerUp={createPointerUpHandler('decrease')}
           onPointerCancel={handlePointerCancel}
           className="touch-manipulation rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-lg font-semibold text-slate-100 transition hover:border-emerald-400 hover:text-emerald-300"
-          aria-label={`Decrease ${label}`}
+          aria-label={copy.decreaseValue(label)}
         >
           −
         </button>
@@ -257,7 +259,7 @@ export function InputField({
           onPointerUp={createPointerUpHandler('increase')}
           onPointerCancel={handlePointerCancel}
           className="touch-manipulation rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-lg font-semibold text-slate-100 transition hover:border-emerald-400 hover:text-emerald-300"
-          aria-label={`Increase ${label}`}
+          aria-label={copy.increaseValue(label)}
         >
           +
         </button>

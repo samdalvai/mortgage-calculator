@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
 
-import { EURO_NUMBER_LOCALE, parseLocalizedNumber } from '../../../packages/core/src'
+import { EURO_NUMBER_LOCALE, parseLocalizedNumber, type Translation } from '../../../packages/core/src'
 
 type NumberInputProps = {
+  copy: Pick<Translation, 'decreaseValue' | 'increaseValue'>
   label: string
   value: number
   min?: number
@@ -44,6 +45,7 @@ const formatEuropeanNumber = (value: number, fractionDigits: number, useGrouping
   }).format(value)
 
 export function NumberInput({
+  copy,
   label,
   value,
   min,
@@ -96,7 +98,7 @@ export function NumberInput({
       <View style={styles.inputRow}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`Decrease ${label}`}
+          accessibilityLabel={copy.decreaseValue(label)}
           style={({ pressed }) => [styles.stepButton, pressed && styles.pressed]}
           onPress={() => handleStepChange('decrease')}
         >
@@ -139,7 +141,7 @@ export function NumberInput({
         />
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`Increase ${label}`}
+          accessibilityLabel={copy.increaseValue(label)}
           style={({ pressed }) => [styles.stepButton, pressed && styles.pressed]}
           onPress={() => handleStepChange('increase')}
         >

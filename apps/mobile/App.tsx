@@ -77,6 +77,14 @@ const writeStorageFile = async (path: string, contents: string) => {
   await FileSystem.writeAsStringAsync(path, contents, { encoding: FileSystem.EncodingType.UTF8 })
 }
 
+type StorageErrorKind = 'read' | 'save-inputs' | 'save-archive'
+
+const STORAGE_ERROR_COPY_KEY = {
+  read: 'storageReadError',
+  'save-inputs': 'storageSaveInputsError',
+  'save-archive': 'storageSaveArchiveError',
+} as const
+
 const createArchiveId = () => `${Date.now()}-${Math.random().toString(36).slice(2)}`
 
 export default function App() {
@@ -105,7 +113,7 @@ function MortgageCalculatorScreen() {
   const [archivedPlanDraftNames, setArchivedPlanDraftNames] = useState<Record<string, string>>({})
   const [archiveName, setArchiveName] = useState('')
   const [archiveFeedback, setArchiveFeedback] = useState<string | null>(null)
-  const [storageFeedback, setStorageFeedback] = useState<string | null>(null)
+  const [storageError, setStorageError] = useState<StorageErrorKind | null>(null)
 
   const copy = TRANSLATIONS[language]
   const archiveDateFormatter = useMemo(
@@ -186,8 +194,9 @@ function MortgageCalculatorScreen() {
         setLanguage(storedInputs.language)
         setArchivedPlans(storedArchivedPlans)
       } catch (error) {
+        console.warn('Unable to read saved data', error)
         if (active) {
-          setStorageFeedback(error instanceof Error ? error.message : 'Unable to read saved data.')
+          setStorageError('read')
         }
       } finally {
         if (active) {
@@ -219,9 +228,12 @@ function MortgageCalculatorScreen() {
       additionalPaymentStrategy,
     }
 
-    writeStorageFile(INPUTS_FILE, JSON.stringify(inputs)).catch((error) => {
-      setStorageFeedback(error instanceof Error ? error.message : 'Unable to save inputs.')
-    })
+    writeStorageFile(INPUTS_FILE, JSON.stringify(inputs))
+      .then(() => setStorageError((current) => (current === 'save-inputs' ? null : current)))
+      .catch((error) => {
+        console.warn('Unable to save inputs', error)
+        setStorageError('save-inputs')
+      })
   }, [
     additionalAnnualPayment,
     additionalPaymentStrategy,
@@ -239,9 +251,12 @@ function MortgageCalculatorScreen() {
       return
     }
 
-    writeStorageFile(ARCHIVE_FILE, JSON.stringify(archivedPlans)).catch((error) => {
-      setStorageFeedback(error instanceof Error ? error.message : 'Unable to save archived plans.')
-    })
+    writeStorageFile(ARCHIVE_FILE, JSON.stringify(archivedPlans))
+      .then(() => setStorageError((current) => (current === 'save-archive' ? null : current)))
+      .catch((error) => {
+        console.warn('Unable to save archived plans', error)
+        setStorageError('save-archive')
+      })
   }, [archivedPlans, isHydrated])
 
   useEffect(() => {
@@ -388,7 +403,8 @@ function MortgageCalculatorScreen() {
       setArchiveFeedback(`${copy.exportPlanAsPdf}: ${fileUri}`)
       Alert.alert(copy.exportPlanAsPdf, fileUri)
     } catch (error) {
-      Alert.alert(copy.exportPlanAsPdf, error instanceof Error ? error.message : 'Unable to export PDF.')
+      console.warn('Unable to export PDF', error)
+      Alert.alert(copy.exportPlanAsPdf, copy.pdfExportError)
     }
   }
 
@@ -436,11 +452,12 @@ function MortgageCalculatorScreen() {
             </View>
 
             <View style={styles.card}>
-              <NumberInput label={copy.houseCost} value={houseCost} min={0} step={5000} onValueChange={setHouseCost} useGrouping />
-              <NumberInput label={copy.downPayment} value={downPayment} min={0} step={1000} onValueChange={setDownPayment} useGrouping />
+              <NumberInput copy={copy} label={copy.houseCost} value={houseCost} min={0} step={5000} onValueChange={setHouseCost} useGrouping />
+              <NumberInput copy={copy} label={copy.downPayment} value={downPayment} min={0} step={1000} onValueChange={setDownPayment} useGrouping />
               {downPayment > houseCost ? <Text style={styles.errorText}>{copy.downPaymentExceedsHouseCostError}</Text> : null}
-              <NumberInput label={copy.mortgageDurationYears} value={years} min={1} step={1} onValueChange={setYears} />
+              <NumberInput copy={copy} label={copy.mortgageDurationYears} value={years} min={1} step={1} onValueChange={setYears} />
               <NumberInput
+                copy={copy}
                 label={copy.annualInterestRate}
                 value={annualInterestRate}
                 min={0}
@@ -451,6 +468,7 @@ function MortgageCalculatorScreen() {
                 hint={copy.annualInterestRateHint}
               />
               <NumberInput
+                copy={copy}
                 label={copy.monthlyBankCost}
                 value={monthlyBankCost}
                 min={0}
@@ -460,6 +478,7 @@ function MortgageCalculatorScreen() {
                 fractionDigits={2}
               />
               <NumberInput
+                copy={copy}
                 label={copy.additionalAnnualPayment}
                 value={additionalAnnualPayment}
                 min={0}
@@ -581,7 +600,7 @@ function MortgageCalculatorScreen() {
                 <Text style={styles.emptyText}>{copy.noArchivedPlans}</Text>
               )}
               {archiveFeedback ? <Text style={styles.feedbackText}>{archiveFeedback}</Text> : null}
-              {storageFeedback ? <Text style={styles.errorText}>{storageFeedback}</Text> : null}
+              {storageError ? <Text style={styles.errorText}>{copy[STORAGE_ERROR_COPY_KEY[storageError]]}</Text> : null}
             </View>
 
             {showPlan && !validationError ? (

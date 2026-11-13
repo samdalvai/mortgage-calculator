@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 
-import { EURO_NUMBER_LOCALE } from '../../../../packages/core/src'
+import { EURO_NUMBER_LOCALE, type Translation } from '../../../../packages/core/src'
 
 export type ChartPoint = {
   year: number
@@ -10,13 +10,14 @@ export type ChartPoint = {
 }
 
 type InteractiveChartProps = {
+  copy: Pick<Translation, 'chartTitle' | 'selectChartYear'>
   data: ChartPoint[]
   maxAmount: number
   selectedYear: number
   onYearChange: (year: number) => void
 }
 
-export function InteractiveChart({ data, maxAmount, selectedYear, onYearChange }: InteractiveChartProps) {
+export function InteractiveChart({ copy, data, maxAmount, selectedYear, onYearChange }: InteractiveChartProps) {
   const width = 1200
   const height = 650
   const padding = { top: 20, right: 24, bottom: 40, left: 112 }
@@ -77,7 +78,7 @@ export function InteractiveChart({ data, maxAmount, selectedYear, onYearChange }
         viewBox={`0 0 ${width} ${height}`}
         className="h-[250px] w-full"
         role="img"
-        aria-label="Mortgage capital and interest chart"
+        aria-label={copy.chartTitle}
       >
         <line
           x1={padding.left}
@@ -142,7 +143,7 @@ export function InteractiveChart({ data, maxAmount, selectedYear, onYearChange }
           step={1}
           value={Math.min(Math.max(selectedYear, 0), Math.max(data.length - 1, 0))}
           onChange={(event) => onYearChange(Number(event.target.value))}
-          aria-label="Select chart year"
+          aria-label={copy.selectChartYear}
           className="h-2 w-full cursor-pointer accent-emerald-400"
         />
       </div>

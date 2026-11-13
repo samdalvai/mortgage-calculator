@@ -34,6 +34,13 @@ export type Translation = {
   deleteArchivedPlanConfirmMessage: (name: string) => string
   confirmDelete: string
   cancel: string
+  decreaseValue: (label: string) => string
+  increaseValue: (label: string) => string
+  selectChartYear: string
+  storageReadError: string
+  storageSaveInputsError: string
+  storageSaveArchiveError: string
+  pdfExportError: string
   archiveRenamedMessage: (name: string) => string
   archiveUpdatedMessage: (name: string) => string
   renameArchivedPlan: string
@@ -134,6 +141,13 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     deleteArchivedPlanConfirmMessage: (name: string) => `"${name}" will be permanently removed from your archive.`,
     confirmDelete: 'Delete',
     cancel: 'Cancel',
+    decreaseValue: (label: string) => `Decrease ${label}`,
+    increaseValue: (label: string) => `Increase ${label}`,
+    selectChartYear: 'Select chart year',
+    storageReadError: 'Saved data could not be loaded. Default values are shown.',
+    storageSaveInputsError: 'Your inputs could not be saved on this device.',
+    storageSaveArchiveError: 'Archived plans could not be saved on this device.',
+    pdfExportError: 'The PDF could not be created.',
     archiveRenamedMessage: (name: string) => `Renamed archived plan to "${name}".`,
     archiveUpdatedMessage: (name: string) => `Updated archived plan "${name}" with your current changes.`,
     renameArchivedPlan: 'Rename archived plan',
@@ -232,6 +246,13 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     deleteArchivedPlanConfirmMessage: (name: string) => `"${name}" verrà rimosso definitivamente dall'archivio.`,
     confirmDelete: 'Elimina',
     cancel: 'Annulla',
+    decreaseValue: (label: string) => `Diminuisci ${label}`,
+    increaseValue: (label: string) => `Aumenta ${label}`,
+    selectChartYear: 'Seleziona anno del grafico',
+    storageReadError: 'Impossibile caricare i dati salvati. Vengono mostrati i valori predefiniti.',
+    storageSaveInputsError: 'Impossibile salvare i dati inseriti su questo dispositivo.',
+    storageSaveArchiveError: 'Impossibile salvare i piani archiviati su questo dispositivo.',
+    pdfExportError: 'Impossibile creare il PDF.',
     archiveRenamedMessage: (name: string) => `Piano archiviato rinominato in "${name}".`,
     archiveUpdatedMessage: (name: string) => `Il piano archiviato "${name}" è stato aggiornato con le modifiche correnti.`,
     renameArchivedPlan: 'Rinomina piano archiviato',
@@ -332,6 +353,13 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     deleteArchivedPlanConfirmMessage: (name: string) => `"${name}" sera définitivement supprimé des archives.`,
     confirmDelete: 'Supprimer',
     cancel: 'Annuler',
+    decreaseValue: (label: string) => `Diminuer ${label}`,
+    increaseValue: (label: string) => `Augmenter ${label}`,
+    selectChartYear: "Sélectionner l'année du graphique",
+    storageReadError: 'Impossible de charger les données enregistrées. Les valeurs par défaut sont affichées.',
+    storageSaveInputsError: "Impossible d'enregistrer vos saisies sur cet appareil.",
+    storageSaveArchiveError: "Impossible d'enregistrer les plans archivés sur cet appareil.",
+    pdfExportError: 'Impossible de créer le PDF.',
     archiveRenamedMessage: (name: string) => `Plan archivé renommé en "${name}".`,
     archiveUpdatedMessage: (name: string) => `Plan archivé "${name}" mis à jour avec vos modifications.`,
     renameArchivedPlan: 'Renommer le plan archivé',
@@ -432,6 +460,13 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     deleteArchivedPlanConfirmMessage: (name: string) => `"${name}" wird endgültig aus dem Archiv entfernt.`,
     confirmDelete: 'Löschen',
     cancel: 'Abbrechen',
+    decreaseValue: (label: string) => `${label} verringern`,
+    increaseValue: (label: string) => `${label} erhöhen`,
+    selectChartYear: 'Jahr im Diagramm auswählen',
+    storageReadError: 'Gespeicherte Daten konnten nicht geladen werden. Es werden Standardwerte angezeigt.',
+    storageSaveInputsError: 'Ihre Eingaben konnten auf diesem Gerät nicht gespeichert werden.',
+    storageSaveArchiveError: 'Archivierte Pläne konnten auf diesem Gerät nicht gespeichert werden.',
+    pdfExportError: 'Das PDF konnte nicht erstellt werden.',
     archiveRenamedMessage: (name: string) => `Archivierter Plan wurde zu "${name}" umbenannt.`,
     archiveUpdatedMessage: (name: string) => `Archivierter Plan "${name}" wurde mit deinen aktuellen Änderungen aktualisiert.`,
     renameArchivedPlan: 'Archivierten Plan umbenennen',

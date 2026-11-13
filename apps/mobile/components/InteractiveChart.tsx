@@ -122,7 +122,7 @@ export function InteractiveChart({ copy, data, formatter, maxAmount, selectedYea
         </Text>
       </View>
       <Slider
-        accessibilityLabel={copy.chartSubtitle}
+        accessibilityLabel={copy.selectChartYear}
         minimumValue={0}
         maximumValue={maxIndex}
         step={1}

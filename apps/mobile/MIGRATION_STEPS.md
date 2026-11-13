@@ -69,6 +69,8 @@ This document tracks the migration of `apps/mobile` into a native version of the
 
    The initial language now defaults from the device locale through `expo-localization`, falling back to English when the device language is unsupported.
 
+   Screen-reader labels (step buttons, chart year slider) and storage and PDF error messages are translated too. Storage errors are kept as an error kind and rendered in the current language, cleared after the next successful save, and their technical details go to the console.
+
 7. Validation.
 
    Mobile now matches the web validation rules:
