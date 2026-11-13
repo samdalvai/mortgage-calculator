@@ -60,6 +60,8 @@ This document tracks the migration of `apps/mobile` into a native version of the
    - min/max clamping
    - step buttons
    - grouped numbers
+   - dot or comma decimal separators via the shared `parseLocalizedNumber`, since mobile keypads often only offer "."
+   - an integer-only keypad for fields without decimals
 
 6. Localization.
 
