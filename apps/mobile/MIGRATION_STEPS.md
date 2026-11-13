@@ -112,7 +112,7 @@ This document tracks the migration of `apps/mobile` into a native version of the
    - archiving the current plan
    - restoring archived plans
    - saving current changes into an archived plan
-   - deleting archived plans
+   - deleting archived plans, after a native confirmation dialog
    - archive feedback messages
    - limiting archives to `MAX_ARCHIVED_PLANS`
 
@@ -133,6 +133,8 @@ This document tracks the migration of `apps/mobile` into a native version of the
     - plan totals
 
     The screen now uses `FlatList` so long amortization plans render lazily instead of mapping hundreds of rows inside a single scroll view.
+
+    The list adjusts its insets for the keyboard on iOS so focused fields stay visible, and dragging the list dismisses the keyboard.
 
 13. Mobile PDF export.
 
