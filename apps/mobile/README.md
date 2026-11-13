@@ -23,3 +23,35 @@ npm run ios
 npm run android
 npm run web
 ```
+
+## Building installable apps
+
+Builds use [EAS Build](https://docs.expo.dev/build/introduction/) with the profiles in `eas.json`. You need a free Expo account; the first build links the project to it.
+
+```bash
+npm install -g eas-cli
+eas login
+```
+
+Android APK for testing on a device (download link is printed when the build finishes):
+
+```bash
+eas build -p android --profile preview
+```
+
+iOS simulator build:
+
+```bash
+eas build -p ios --profile preview
+```
+
+Store builds (Android App Bundle / iOS archive):
+
+```bash
+eas build -p android --profile production
+eas build -p ios --profile production
+```
+
+App identifiers are `com.samdalvai.mortgagecalculator` on both platforms. Bump `version` in `app.json` for each release, plus `android.versionCode` and `ios.buildNumber` for each store upload.
+
+App icon, Android adaptive icon and splash screen live in `assets/` and are rendered from the web app's house-and-chart favicon.

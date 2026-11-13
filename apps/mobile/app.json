@@ -2,20 +2,33 @@
   "expo": {
     "name": "Mortgage Calculator",
     "slug": "mortgage-calculator",
-    "version": "0.0.0",
+    "version": "1.0.0",
     "orientation": "portrait",
-    "userInterfaceStyle": "automatic",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#020617",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#020617"
+    },
     "assetBundlePatterns": ["**/*"],
     "ios": {
+      "bundleIdentifier": "com.samdalvai.mortgagecalculator",
+      "buildNumber": "1",
       "supportsTablet": true
     },
     "android": {
+      "package": "com.samdalvai.mortgagecalculator",
+      "versionCode": 1,
       "adaptiveIcon": {
-        "backgroundColor": "#020617"
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0f172a"
       }
     },
     "web": {
-      "bundler": "metro"
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png"
     }
   }
 }

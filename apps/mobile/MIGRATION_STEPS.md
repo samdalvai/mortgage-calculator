@@ -140,7 +140,11 @@ This document tracks the migration of `apps/mobile` into a native version of the
 
     Mobile now creates the mortgage plan PDF content with shared core logic, writes the PDF file into the app document directory with `expo-file-system`, and opens the platform share sheet with `expo-sharing` when available.
 
-14. Verification.
+14. Build configuration.
+
+    `app.json` now defines version `1.0.0`, the `com.samdalvai.mortgagecalculator` app identifier for Android and iOS, the app icon, Android adaptive icon, splash screen and a fixed dark interface style. `eas.json` provides a `preview` profile that builds an installable Android APK (and an iOS simulator build) and a `production` profile for store builds. See `README.md` for the commands.
+
+15. Verification.
 
     Completed checks:
 
