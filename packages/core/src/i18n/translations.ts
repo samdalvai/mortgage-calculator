@@ -30,6 +30,10 @@ export type Translation = {
   archiveSavedMessage: (name: string) => string
   archiveRestoredMessage: (name: string) => string
   archiveDeletedMessage: (name: string) => string
+  deleteArchivedPlanConfirmTitle: string
+  deleteArchivedPlanConfirmMessage: (name: string) => string
+  confirmDelete: string
+  cancel: string
   archiveRenamedMessage: (name: string) => string
   archiveUpdatedMessage: (name: string) => string
   renameArchivedPlan: string
@@ -126,6 +130,10 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     archiveSavedMessage: (name: string) => `Saved "${name}" to your archive.`,
     archiveRestoredMessage: (name: string) => `Restored "${name}".`,
     archiveDeletedMessage: (name: string) => `Deleted "${name}" from your archive.`,
+    deleteArchivedPlanConfirmTitle: 'Delete archived plan?',
+    deleteArchivedPlanConfirmMessage: (name: string) => `"${name}" will be permanently removed from your archive.`,
+    confirmDelete: 'Delete',
+    cancel: 'Cancel',
     archiveRenamedMessage: (name: string) => `Renamed archived plan to "${name}".`,
     archiveUpdatedMessage: (name: string) => `Updated archived plan "${name}" with your current changes.`,
     renameArchivedPlan: 'Rename archived plan',
@@ -220,6 +228,10 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     archiveSavedMessage: (name: string) => `"${name}" salvato nell'archivio.`,
     archiveRestoredMessage: (name: string) => `"${name}" ripristinato.`,
     archiveDeletedMessage: (name: string) => `"${name}" eliminato dall'archivio.`,
+    deleteArchivedPlanConfirmTitle: 'Eliminare il piano archiviato?',
+    deleteArchivedPlanConfirmMessage: (name: string) => `"${name}" verrà rimosso definitivamente dall'archivio.`,
+    confirmDelete: 'Elimina',
+    cancel: 'Annulla',
     archiveRenamedMessage: (name: string) => `Piano archiviato rinominato in "${name}".`,
     archiveUpdatedMessage: (name: string) => `Il piano archiviato "${name}" è stato aggiornato con le modifiche correnti.`,
     renameArchivedPlan: 'Rinomina piano archiviato',
@@ -316,6 +328,10 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     archiveSavedMessage: (name: string) => `"${name}" enregistré dans vos archives.`,
     archiveRestoredMessage: (name: string) => `"${name}" restauré.`,
     archiveDeletedMessage: (name: string) => `"${name}" supprimé des archives.`,
+    deleteArchivedPlanConfirmTitle: 'Supprimer le plan archivé ?',
+    deleteArchivedPlanConfirmMessage: (name: string) => `"${name}" sera définitivement supprimé des archives.`,
+    confirmDelete: 'Supprimer',
+    cancel: 'Annuler',
     archiveRenamedMessage: (name: string) => `Plan archivé renommé en "${name}".`,
     archiveUpdatedMessage: (name: string) => `Plan archivé "${name}" mis à jour avec vos modifications.`,
     renameArchivedPlan: 'Renommer le plan archivé',
@@ -412,6 +428,10 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translation> = {
     archiveSavedMessage: (name: string) => `"${name}" wurde im Archiv gespeichert.`,
     archiveRestoredMessage: (name: string) => `"${name}" wurde wiederhergestellt.`,
     archiveDeletedMessage: (name: string) => `"${name}" wurde aus dem Archiv gelöscht.`,
+    deleteArchivedPlanConfirmTitle: 'Archivierten Plan löschen?',
+    deleteArchivedPlanConfirmMessage: (name: string) => `"${name}" wird endgültig aus dem Archiv entfernt.`,
+    confirmDelete: 'Löschen',
+    cancel: 'Abbrechen',
     archiveRenamedMessage: (name: string) => `Archivierter Plan wurde zu "${name}" umbenannt.`,
     archiveUpdatedMessage: (name: string) => `Archivierter Plan "${name}" wurde mit deinen aktuellen Änderungen aktualisiert.`,
     renameArchivedPlan: 'Archivierten Plan umbenennen',

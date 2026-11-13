@@ -309,8 +309,17 @@ export default function App() {
   }
 
   const handleDeleteArchivedPlan = (archivedPlan: ArchivedPlan) => {
-    setArchivedPlans((currentPlans) => currentPlans.filter((planItem) => planItem.id !== archivedPlan.id))
-    setArchiveFeedback(copy.archiveDeletedMessage(archivedPlan.name))
+    Alert.alert(copy.deleteArchivedPlanConfirmTitle, copy.deleteArchivedPlanConfirmMessage(archivedPlan.name), [
+      { text: copy.cancel, style: 'cancel' },
+      {
+        text: copy.confirmDelete,
+        style: 'destructive',
+        onPress: () => {
+          setArchivedPlans((currentPlans) => currentPlans.filter((planItem) => planItem.id !== archivedPlan.id))
+          setArchiveFeedback(copy.archiveDeletedMessage(archivedPlan.name))
+        },
+      },
+    ])
   }
 
   const handleSaveCurrentChangesToArchivedPlan = (archivedPlan: ArchivedPlan) => {
@@ -411,6 +420,8 @@ export default function App() {
         keyExtractor={(installment) => installment.month.toString()}
         renderItem={renderInstallment}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        automaticallyAdjustKeyboardInsets
         contentContainerStyle={styles.container}
         ListHeaderComponent={
           <View style={styles.topSections}>
