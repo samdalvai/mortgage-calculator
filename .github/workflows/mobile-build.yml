@@ -1,0 +1,90 @@
+name: Mobile build (EAS)
+
+# Builds the Expo app on EAS Build using the profiles in apps/mobile/eas.json.
+# Started manually (Actions -> Mobile build (EAS) -> Run workflow) or by pushing a
+# tag like v1.2.0, so builds don't use up the EAS plan on every push.
+#
+# One-time setup:
+#   1. In apps/mobile run `npx eas-cli init` and commit the projectId it adds to app.json.
+#   2. Create an access token at https://expo.dev/settings/access-tokens and save it as
+#      the repository secret EXPO_TOKEN (Settings -> Secrets and variables -> Actions).
+#   3. Production builds need signing credentials stored on EAS: run one production
+#      build interactively first (`npx eas-cli build --profile production`).
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: Platform to build
+        type: choice
+        options: [android, ios, all]
+        default: android
+      profile:
+        description: Build profile from eas.json (preview = installable APK / iOS simulator build)
+        type: choice
+        options: [preview, production]
+        default: preview
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mobile-build-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  checks:
+    uses: ./.github/workflows/checks.yml
+
+  build:
+    name: EAS build (${{ inputs.platform || 'android' }}, ${{ inputs.profile || 'production' }})
+    needs: checks
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/mobile
+    env:
+      # Tag pushes build a store-ready Android bundle; manual runs use the chosen inputs.
+      PLATFORM: ${{ inputs.platform || 'android' }}
+      PROFILE: ${{ inputs.profile || 'production' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check EAS setup
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "::error::The EXPO_TOKEN secret is missing. Create a token at https://expo.dev/settings/access-tokens and add it under Settings -> Secrets and variables -> Actions."
+            exit 1
+          fi
+          if ! node -e "process.exit(require('./app.json').expo?.extra?.eas?.projectId ? 0 : 1)"; then
+            echo "::error::apps/mobile/app.json has no expo.extra.eas.projectId. Run 'npx eas-cli init' in apps/mobile once and commit the change."
+            exit 1
+          fi
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            apps/mobile/package-lock.json
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install mobile dependencies
+        run: npm ci
+
+      - name: Start EAS build
+        # --no-wait submits the build and returns; the build runs on EAS (10-20 minutes)
+        # and its page, with the download link, is printed below and on expo.dev.
+        run: eas build --platform "$PLATFORM" --profile "$PROFILE" --non-interactive --no-wait

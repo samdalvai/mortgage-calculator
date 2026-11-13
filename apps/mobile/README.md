@@ -52,6 +52,16 @@ eas build -p android --profile production
 eas build -p ios --profile production
 ```
 
+### Building from GitHub Actions
+
+The **Mobile build (EAS)** workflow (`.github/workflows/mobile-build.yml`) runs the same checks as CI and then starts an EAS build. Start it from **Actions → Mobile build (EAS) → Run workflow** and pick the platform and profile; pushing a tag such as `v1.0.0` starts a production Android build. The job submits the build and prints its link; the build itself runs on EAS and the download appears on expo.dev when it finishes.
+
+One-time setup:
+
+1. Link the project to your Expo account: run `npx eas-cli init` in this folder and commit the `projectId` it adds to `app.json`.
+2. Create an access token at https://expo.dev/settings/access-tokens and add it as the repository secret `EXPO_TOKEN` (**Settings → Secrets and variables → Actions**).
+3. For `production` builds, run one production build interactively first so EAS can create and store the signing credentials.
+
 App identifiers are `com.samdalvai.mortgagecalculator` on both platforms. Bump `version` in `app.json` for each release, plus `android.versionCode` and `ios.buildNumber` for each store upload.
 
 App icon, Android adaptive icon and splash screen live in `assets/`. They share a pixel-art icon with the web app, drawn on a 32x32 grid in `scripts/icon/pixel_icon.py`. To change it, edit the grid and regenerate everything from the repository root:
